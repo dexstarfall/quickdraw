@@ -7,8 +7,7 @@ function generateSeed() {
   return Math.floor(Math.random() * (2 ** 31 - 1)) + 1;
 }
 
-function createElement(coordinate, tool) {
-
+function createElement(id, properties, type) {
   const prop1 = {
     strokeWidth: 1,
     seed: generateSeed(),
@@ -23,75 +22,65 @@ function createElement(coordinate, tool) {
   }
   // const slop
 
-  const propeties = {
-    ...prop1,
+  const props = {
+    ...prop3,
     stroke: 'lightcoral',
     roughness: 0,
     bowing: 3,
     // disableMultiStroke: true
   };
 
-  const { x1, y1, x2, y2 } = coordinate;
-  const height = y2 - y1;
-  const width = x2 - x1;
+  const { x1, y1, x2, y2, width, height } = properties;
 
   let roughElement = {};
-  let boundingBox = {}
-  if (tool === "line") {
 
-    boundingBox = { LTx1: x1, LTy1: y1, RBbx2: x2, RBy2: y2 }
-
-    const boundingBox = {
-      x: Math.min(x1, x2),
-      y: Math.min(y1, y2),
-      width: Math.abs(x2 - x1),
-      height: Math.abs(y2 - y1),
-    };
-    
-
-
-    roughElement = generator.line(x1, y1, x2, y2, propeties);
-  } else if (tool === "rectangle") {
-    roughElement = generator.rectangle(x1, y1, width, height, propeties);
-  } else if (tool === "circle") {
+  if (type === "line") {
+    roughElement = generator.line(x1, y1, x2, y2, props);
+  } else if (type === "rectangle") {
+    const rectWidth = x2 - x1;
+    const rectHeight = y2 - y1;
+    roughElement = generator.rectangle(x1, y1, rectWidth, rectHeight, props);
+  } else if (type === "ellipse") {
     const centerX = (x2 + x1) / 2;
     const centerY = (y2 + y1) / 2;
-    roughElement = generator.ellipse(centerX, centerY, width, height, propeties);
+    roughElement = generator.ellipse(centerX, centerY, width, height, props);
   }
-
-  return { coordinate, roughElement, boundingBox };
+  return { id, properties, roughElement, type };
 }
+
+
+// --------------------------------------
 
 
 function Canvas() {
   const canvasRef = useRef(null);
 
+  // none, drawing, moving,
   const [action, setAction] = useState("none");
-  const [elements, setElements] = useState([]);
+  // slection, line, rectangle, ellipse
   const [tool, setTool] = useState("line");
+
+  //  all shapes drawn in canvas (for now)
+  const [allElements, setAllElements] = useState([]);
+  // currently selected element while moving (for now)
+  const [selectedElement, setSelectedElement] = useState(null);
 
   const [canvasSize, setCanvasSize] = useState({
     width: window.innerWidth,
     height: window.innerHeight,
   });
 
-  // moving and element
-  const [selectedElementIndex, setSelectedElementIndex] = useState(null);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-
-
-
+  // rerender everytime any achanges occurs
   useEffect(() => {
     const canvas = canvasRef.current;
     const canvasCtx = canvas.getContext('2d');
     canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
-
     const roughCanvas = rough.canvas(canvas);
 
-    elements.forEach(({ roughElement }) => roughCanvas.draw(roughElement));
+    allElements.forEach(({ roughElement }) => roughCanvas.draw(roughElement));
+  }, [canvasSize, allElements, action]);
 
-  }, [canvasSize, elements]);
-
+  //on window resize update canvas
   useEffect(() => {
     const handleResize = () => {
       setCanvasSize({
@@ -106,38 +95,127 @@ function Canvas() {
     };
   }, []);
 
+
+  //functions
+  function isWithinElement(mx, my, element, threshold = 5) {
+    function distance(a, b) {
+      return (
+        Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2))
+      );
+    }
+    const { type } = element;
+    const { x1, y1, x2, y2 } = element.properties;
+    if (type == "rectangle") {
+      // const minX = Math.min(x1, x2);
+      // const minY = Math.min(y1, y2);
+      // const maxX = Math.max(x1, x2);
+      // const maxY = Math.max(y1, y2);
+      // return x >= minX && x <= maxX && y >= minY && y <= maxY;
+
+      const left = Math.min(x1, x2);
+      const right = Math.max(x1, x2);
+      const top = Math.min(y1, y2);
+      const bottom = Math.max(y1, y2);
+
+      const nearLeft = Math.abs(mx - left) <= threshold && my >= top && my <= bottom;
+      const nearRight = Math.abs(mx - right) <= threshold && my >= top && my <= bottom;
+      const nearTop = Math.abs(my - top) <= threshold && mx >= left && mx <= right;
+      const nearBottom = Math.abs(my - bottom) <= threshold && mx >= left && mx <= right;
+
+      return nearLeft || nearRight || nearTop || nearBottom;
+    } else if (type == "line") {
+      const a = { x: x1, y: y1 };
+      const b = { x: x2, y: y2 };
+      const c = { x: mx, y: my };
+      const offset = distance(a, b) - (distance(a, c) + distance(b, c));
+      return Math.abs(offset) < threshold / threshold;
+    }
+  };
+
+  function getElementAtPosition(x, y) {
+    return allElements.find(element => isWithinElement(x, y, element))
+  }
+
+  // update any element
+  function updateElement(id, properties, type) {
+    const updatedElement = createElement(id, properties, type);
+    setAllElements(pre => pre.map((elm, i) => i === id ? updatedElement : elm));
+  }
+
+  // mouse down
   function handleMouseDown(event) {
     const { clientX, clientY } = event;
+
     if (tool === "selection") {
-      // if object -- selected -- can move
+      const element = getElementAtPosition(clientX, clientY);
+      if (element) {
+        const offset = {
+          offsetX: clientX - element.properties.x1,
+          offsetY: clientY - element.properties.y1
+        }
+        console.log(element);
+        console.log(offset);
+        setSelectedElement({ ...element, offset });
+        setAction("moving");
+      }
     } else {
-      const coordinate = { x1: clientX, y1: clientY, x2: clientX, y2: clientY }
-      const element = createElement(coordinate, tool);
-      setElements(previousState => [...previousState, element]);
+      const id = allElements.length;
+      const properties = {
+        x1: clientX,
+        y1: clientY,
+        x2: clientX,
+        y2: clientY,
+      }
+      const element = createElement(id, properties, tool);
+      setAllElements(previousState => [...previousState, element]);
       setAction("drawing");
     }
   }
 
+  // mouse move
   function handleMouseMove(event) {
     const { clientX, clientY } = event;
-    if (action === "drawing") {
-      const index = elements.length - 1;
-      const { x1, y1 } = elements[index].coordinate;
-      const coordinate = { x1: x1, y1: y1, x2: clientX, y2: clientY }
-      const newElement = createElement(coordinate, tool);
-      setElements(pElm => pElm.map((elm, i) => i === index ? newElement : elm));
+    if (action === "moving") {
+      const { id, properties, type, offset } = selectedElement;
+      const { x1, y1, x2, y2, width, height } = properties;
+      const { offsetX, offsetY } = offset;
 
+      const newX = clientX - offsetX;
+      const newY = clientY - offsetY;
+      const updatedCoordinate = {
+        x1: newX,
+        y1: newY,
+        x2: newX + width,
+        y2: newY + height
+      }
+      updateElement(id, updatedCoordinate, type);
+    }
+    else if (action === "drawing") {
+      const id = allElements.length - 1;
+      const { x1, y1 } = allElements[id].properties;
+
+      const updatedCoordinate = {
+        x1: x1,
+        y1: y1,
+        x2: clientX,
+        y2: clientY,
+        width: Math.abs(clientX - x1),
+        height: Math.abs(clientY - y1),
+      }
+      updateElement(id, updatedCoordinate, tool);
     }
   }
 
+  // mouse up
   function handleMouseUp(event) {
-    const index = elements.length - 1;
-    const { x1, y1, x2, y2 } = elements[index].coordinate;
-    console.log(x1, y1, x2, y2);
+    const index = allElements.length - 1;
+    const { x1, y1, x2, y2 } = allElements[index].properties;
     if (x1 === x2 && y1 === y2) {
-      setElements(pElm => pElm.filter((elm, i) => i !== index));
+      setAllElements(prev => prev.filter((elm, i) => i !== index));
     }
+
     setAction("none");
+    setSelectedElement(null);
   }
 
   return (
@@ -161,11 +239,11 @@ function Canvas() {
         />
         <label htmlFor="rectangle">Rectangle</label>
 
-        <input type="radio" name="circle" id="circle"
-          checked={tool === "circle"}
-          onChange={() => setTool("circle")}
+        <input type="radio" name="ellipse" id="ellipse"
+          checked={tool === "ellipse"}
+          onChange={() => setTool("ellipse")}
         />
-        <label htmlFor="circle">Circle</label>
+        <label htmlFor="ellipse">ellipse</label>
       </div>
       <canvas ref={canvasRef}
         className="bg-white"
