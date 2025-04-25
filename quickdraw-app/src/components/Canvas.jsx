@@ -3,7 +3,7 @@ import rough from 'roughjs';
 
 let generator = rough.generator();
 
-function createElement(id, type, x1, y1, x2, y2) {
+const createElement = (id, type, x1, y1, x2, y2) => {
   const roughProperties = {
     strokeWidth: 3,
     stroke: 'lightcoral',
@@ -28,10 +28,8 @@ function createElement(id, type, x1, y1, x2, y2) {
   return { id, type, x1, y1, x2, y2, roughElement };
 }
 
-
-// --------------------------------------
 // when no shape is selected check for click on line of shape
-function positionOnElement(mx, my, element, threshold = 5) {
+const positionOnElement = (mx, my, element, threshold = 5) => {
   const { type, x1, y1, x2, y2 } = element;
 
   if (type == "rectangle") {
@@ -63,12 +61,12 @@ function positionOnElement(mx, my, element, threshold = 5) {
     return start || end || onShape;
   }
 };
-function distance(a, b) {
+const distance = (a, b) => {
   return (
     Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2))
   );
 }
-function nearPoint(x, y, x1, y1, name) {
+const nearPoint = (x, y, x1, y1, name) => {
   return Math.abs(x - x1) < 5 && Math.abs(y - y1) < 5 ? name : null;
 }
 
@@ -87,7 +85,7 @@ function nearPoint(x, y, x1, y1, name) {
 
 // ------------------------------------------------------------------------
 
-function adjustCoordinates(element) {
+const adjustCoordinates = (element) => {
   const { type, x1, y1, x2, y2 } = element;
 
   const minX = Math.min(x1, x2);
@@ -105,7 +103,7 @@ function adjustCoordinates(element) {
   }
 }
 
-function cursorForPosition(position) {
+const cursorForPosition = (position) => {
   switch (position) {
     case "tl":
     case "br":
@@ -121,37 +119,54 @@ function cursorForPosition(position) {
   }
 }
 
-const resizedCoordinates = (clientX, clientY, position, coordiantes) => {
+const resizeCoordinates = (mX, mY, position, coordiantes) => {
   const { x1, y1, x2, y2 } = coordiantes;
 
   switch (position) {
-    case "tl":
-      return { x1: clientX, y1: clientY, x2, y2 }
-    case "tr":
-      return { x1, y1: clientY, x2: clientX, y2 }
-    case "bl":
-      return { x1: clientX, y1, x2, y2: clientY }
-    case "br":
-      return { x1, y1, x2: clientX, y2: clientY }
-    case "start":
-      return { x1: clientX, y1: clientY, x2, y2 }
-    case "end":
-      return { x1, y1, x2: clientX, y2: clientY }
-    default:
-      return null; // will not get here
+    case "tl": return { x1: mX, y1: mY, x2, y2 };
+    case "tr": return { x1, y1: mY, x2: mX, y2 };
+    case "bl": return { x1: mX, y1, x2, y2: mY };
+    case "br": return { x1, y1, x2: mX, y2: mY };
+    case "start": return { x1: mX, y1: mY, x2, y2 };
+    case "end": return { x1, y1, x2: mX, y2: mY };
+    default: null; // fallback: will not get here
   }
+}
+
+// undo and redo feature
+const useHistory = (initialState) => {
+  const [index, setIndex] = useState(0);
+  const [history, setHistory] = useState([initialState]); // [[], [{}], [{},{}]]
+
+  const setState = (action, overwrite = false) => {
+    // in this case always function is passed but fallback if element is passed
+    const newState = typeof action === "function" ? action(history[index]) : action;
+
+    if (overwrite) {
+      setHistory(pre => pre.map((elm, i) => i === index ? newState : elm));
+    } else {
+      // const undatedState = [...history].slice(0, index -1 );
+      setHistory(pre => [...pre.slice(0, index + 1), newState]);
+      setIndex(pre => pre + 1);
+    }
+  }
+
+  const undo = () => index > 0 && setIndex(pre => pre - 1);
+  const redo = () => index < history.length - 1 && setIndex(pre => pre + 1);
+  return [history[index], setState, undo, redo];
 }
 
 function Canvas() {
   const canvasRef = useRef(null);
+
+  //  all shapes drawn in canvas (for now)
+  const [elements, setElements, undo, redo] = useHistory([]);
 
   // none, drawing, moving,
   const [action, setAction] = useState("none");
   // slection, line, rectangle, ellipse
   const [tool, setTool] = useState("line");
 
-  //  all shapes drawn in canvas (for now)
-  const [elements, setElements] = useState([]);
   // currently selected element while moving (for now)
   const [selectionElement, setSelectionElement] = useState(null);
 
@@ -185,22 +200,39 @@ function Canvas() {
     };
   }, []);
 
-  // ------------------------------------------------------------------------
+  useEffect(() => {
+    const undoRedoFunction = event => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "z") {
+        if (event.shiftKey) {
+          redo();
+        } else {
+          undo();
+        }
+      }
+    };
 
-  function getElementAtPosition(x, y) {
+    document.addEventListener("keydown", undoRedoFunction);
+    return () => {
+      document.removeEventListener("keydown", undoRedoFunction);
+    };
+  }, [undo, redo]);
+
+
+  // functions
+  const getElementAtPosition = (x, y) => {
     return elements
       .map(element => ({ ...element, position: positionOnElement(x, y, element) }))
       .find(element => element.position !== null);
   }
 
   // update Shape
-  function updateElement(id, type, x1, y1, x2, y2) {
+  const updateElement = (id, type, x1, y1, x2, y2) => {
     const updatedElement = createElement(id, type, x1, y1, x2, y2);
-    setElements(pre => pre.map((elm, i) => i === id ? updatedElement : elm));
+    setElements((pre => pre.map((elm, i) => i === id ? updatedElement : elm)), true);
   }
 
   // mouse down
-  function handleMouseDown(event) {
+  const handleMouseDown = (event) => {
     const { clientX, clientY } = event;
 
     if (tool === "selection") {
@@ -211,6 +243,7 @@ function Canvas() {
         const offsetY = clientY - element.y1;
 
         setSelectionElement({ ...element, offsetX, offsetY });
+        setElements(pre => pre);
 
         if (element.position === "onShape") {
           setAction("moving");
@@ -220,15 +253,14 @@ function Canvas() {
       }
     } else { // when tool not selection
       const id = elements.length;
-      const element = createElement(id, tool, clientX, clientY, clientX, clientY);
-      setElements(previousState => [...previousState, element]);
-      // setSelectionElement(element);
+      const newElement = createElement(id, tool, clientX, clientY, clientX, clientY);
+      setElements(pre => [...pre, newElement]);
       setAction("drawing");
     }
   }
 
   // mouse move
-  function handleMouseMove(event) {
+  const handleMouseMove = (event) => {
     const { clientX, clientY } = event;
 
     if (tool === "selection") {
@@ -261,30 +293,28 @@ function Canvas() {
 
     } else if (action === "resizing") {
       const { id, type, position, ...coordiantes } = selectionElement;
-      const { x1, y1, x2, y2 } = resizedCoordinates(clientX, clientY, position, coordiantes);
+      const { x1, y1, x2, y2 } = resizeCoordinates(clientX, clientY, position, coordiantes);
       updateElement(id, type, x1, y1, x2, y2);
     }
   }
 
   // mouse up
-  function handleMouseUp() {
+  const handleMouseUp = () => {
     const index = elements.length - 1;
     const { id, type, x1, y1, x2, y2 } = elements[index];
 
     if (action === "drawing") {
-      const { x1, y1, x2, y2 } = adjustCoordinates(elements[index]);
+      const { x1, y1, x2, y2 } = adjustCoordinates(elements[id]);
 
       updateElement(id, type, x1, y1, x2, y2);
-    } else
-      if (action === "resizing") {
-        const index = selectionElement.id;
-        const { x1, y1, x2, y2 } = adjustCoordinates(elements[index]);
+    } else if (action === "resizing") {
+      const { x1, y1, x2, y2 } = adjustCoordinates(elements[id]);
 
-        updateElement(id, type, x1, y1, x2, y2);
-      }
+      updateElement(index, type, x1, y1, x2, y2);
+    }
 
     if (x1 === x2 && y1 === y2) {
-      setElements(prev => prev.filter((elm, i) => i !== id));
+      undo ();
     }
 
     setAction("none");
@@ -293,7 +323,7 @@ function Canvas() {
 
   return (
     <>
-      <div className='fixed'>
+      <div className="fixed">
         <input type="radio" name="selection" id="selection"
           checked={tool === "selection"}
           onChange={() => setTool("selection")}
@@ -318,14 +348,20 @@ function Canvas() {
         />
         <label htmlFor="ellipse">ellipse</label>
       </div>
+      <div className="fixed bottom-4 left-4">
+        <button className="bg-blue-200 p-2 m-1 rounded-lg"
+          onClick={undo}>Undo</button>
+
+        <button className="bg-blue-200 p-2 m-1 rounded-lg"
+          onClick={redo}>Redo</button>
+      </div>
       <canvas ref={canvasRef}
         className="bg-white"
         width={canvasSize.width}
         height={canvasSize.height}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-      >
+        onMouseUp={handleMouseUp}>
         Canvas here</canvas>
     </>
   )
