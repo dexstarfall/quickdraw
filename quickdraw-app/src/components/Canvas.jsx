@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import rough from 'roughjs';
 import { getStroke } from 'perfect-freehand'
 import { getSvgPathFromStroke } from '../utils/global'
+import { distance } from '../utils/global'
 
 // Logic for
 // Creation of Rough/freehand element 
@@ -39,7 +40,12 @@ const createElement = (id, type, x1, y1, x2, y2) => {
 
     return { id, type, points: [{ x: x1, y: y1 }] };
 
-  } else {
+  } else if (type === "text") {
+
+    return { id, type, x1, y1, x2, y2, width, height, text: "" };
+
+  }
+  else {
     throw new Error(`Type not found: ${type}`)
   }
 }
@@ -52,10 +58,7 @@ const createElement = (id, type, x1, y1, x2, y2) => {
 const nearPoint = (x, y, x1, y1, name) => {
   return Math.abs(x - x1) < 5 && Math.abs(y - y1) < 5 ? name : null;
 }
-// distance b/w 2 points
-const distance = (a, b) => {
-  return Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2))
-}
+
 // check -> 'click' on 'line b/w 2 points'
 const onLine = (mx, my, x1, y1, x2, y2, threshold = 1) => {
   const a = { x: x1, y: y1 };
@@ -101,24 +104,12 @@ const positionOnElement = (mx, my, element, threshold = 5) => {
       return onLine(mx, my, point.x, point.y, nextPoint.x, nextPoint.y, 10) != null;
     })
     return betweenAnyPoints ? "onShape" : null;
+  } else if (type == "text") {
+    return mx >= x1 && mx <= x2 && my >= y1 && my <= y2 ? "onShape" : null;
   }
 };
-// -------------------------------------------------------
-// when an shape is already selected and not a line
-// function isMouseWithinElement(mx, my, element, threshold = 5) {
-//   const { type, properties } = element;
-//   const { x1, y1, x2, y2 } = properties;
-//   if (type == "rectangle") {
-//     const minX = Math.min(x1, x2);
-//     const minY = Math.min(y1, y2);
-//     const maxX = Math.max(x1, x2);
-//     const maxY = Math.max(y1, y2);
-//     return mx >= minX && mx <= maxX && my >= minY && my <= maxY;
-//   }
-// }
-// ------------------------------------------------------------------------
 
-const adjustmentRequired = (type) => ["line", "rectangle", "ellipse"].includes(type);
+const adjustmentRequired = (type) => ["line", "rectangle", "ellipse", "text"].includes(type);
 
 const adjustCoordinates = (element) => {
   const { type, x1, y1, x2, y2 } = element;
@@ -192,11 +183,24 @@ const useHistory = (initialState) => {
 // draw rough element or perfect-freehand
 const drawElement = (roughCanvas, canvasCtx, element) => {
   const { type, points } = element;
+
   if (type === "line" || type === "rectangle" || type === "ellipse") {
+
     roughCanvas.draw(element.roughElement);
+
   } else if (type === "freedraw") {
+
     const stroke = getSvgPathFromStroke(getStroke(points))
     canvasCtx.fill(new Path2D(stroke))
+
+  } else if (type === "text") {
+
+    const { x1, y1, text } = element;
+    canvasCtx.font = "1rem consolas";
+    canvasCtx.textBaseline = "top";
+    // const xNew = x1 - canvasCtx.measureText(text).width / 2;
+    canvasCtx.fillText(text, x1, y1);
+
   }
 }
 // for now get width height of perfect freehand tool
@@ -214,6 +218,7 @@ const getDimension = (points) => {
 }
 function Canvas() {
   const canvasRef = useRef(null);
+  const textAreaRef = useRef();
 
   //  all shapes drawn in canvas (for now)
   const [elements, setElements, undo, redo] = useHistory([]);
@@ -221,11 +226,11 @@ function Canvas() {
   // none, drawing, moving,
   const [action, setAction] = useState("none");
   // slection, line, rectangle, ellipse
-  const [tool, setTool] = useState("freedraw");
+  const [tool, setTool] = useState("text");
 
   // currently selected element while moving (for now)
   const [selectionElement, setSelectionElement] = useState(null);
-
+  //current Canvas size
   const [canvasSize, setCanvasSize] = useState({
     width: window.innerWidth,
     height: window.innerHeight,
@@ -238,21 +243,13 @@ function Canvas() {
     canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
     const roughCanvas = rough.canvas(canvas);
 
-    elements.forEach(elm => drawElement(roughCanvas, canvasCtx, elm));
+    elements.forEach(elm => {
+      // if (action === "writing" && selectionElement.id === elm.id) return;
 
-    // const pointerMoveEvent = (event) => {
-    //   if (event.pointerType === "pen") {
-    //     if (event.pressure !== undefined) {
-    //       const pressure = event.pressure;
-    //       console.log(`Pressure: ${pressure}`);
-    //     }
-    //   }
-    // }
-    // canvas.addEventListener('pointermove', pointerMoveEvent);
-    // return () => {
-    //   canvas.removeEventListener('pointermove', pointerMoveEvent);
-    // };
-  }, [canvasSize, elements, action,]);
+      drawElement(roughCanvas, canvasCtx, elm)
+    });
+
+  }, [canvasSize, elements, action, selectionElement]);
 
   //on window resize update canvas
   useEffect(() => {
@@ -287,6 +284,14 @@ function Canvas() {
     };
   }, [undo, redo]);
 
+  useEffect(() => {
+    const textArea = textAreaRef.current;
+    if (action === "writing") {
+      requestAnimationFrame(() => textArea.focus());
+      textArea.value = selectionElement.text;
+    }
+  }, [action, selectionElement])
+
   // return element at position
   const getElementAtPosition = (x, y) => {
     return elements
@@ -295,16 +300,19 @@ function Canvas() {
   }
 
   // update Shape
-  const updateElement = (id, type, x1, y1, x2, y2) => {
+  const updateElement = (id, type, x1, y1, x2, y2, options) => {
     let updatedElement;
     if (["line", "rectangle", "ellipse"].includes(type)) {
       updatedElement = createElement(id, type, x1, y1, x2, y2);
-    } else {
+    } else if (type == "freedraw") {
       updatedElement = elements[id];
       const { points } = updatedElement;
       const { width, height } = getDimension(points);
       updatedElement = { ...updatedElement, width, height }
       updatedElement.points = [...points, { x: x2, y: y2 }];
+    } else if (type == "text") {
+      updatedElement = createElement(id, type, x1, y1, x2, y2);
+      updatedElement.text = options.text;
     }
     setElements((pre => pre.map((elm, i) => i === id ? updatedElement : elm)), true);
   }
@@ -317,6 +325,7 @@ function Canvas() {
     } else {
       const { x1, y1, x2, y2 } = newPoints
       movedElement = createElement(id, type, x1, y1, x2, y2);
+      movedElement.text = element.text;
     }
     setElements((pre => pre.map((elm, i) => i === id ? movedElement : elm)), true);
   }
@@ -325,8 +334,20 @@ function Canvas() {
   const handleMouseDown = (event) => {
     const { clientX, clientY } = event;
 
+    if (action === "writing") {
+      const { id, type, x1, y1 } = selectionElement;
+      const options = {
+        text: textAreaRef.current.value
+      }
+      const width = canvasRef.current.getContext('2d').measureText(options.text).width;
+      const height = 16;
+      updateElement(id, type, x1, y1, x1 + width, y1 + height, options);
+      setAction("none");
+      return;
+    }
+
+    const element = getElementAtPosition(clientX, clientY);
     if (tool === "selection") {
-      const element = getElementAtPosition(clientX, clientY);
 
       if (element) {
         if (element.type === "freedraw") {
@@ -347,10 +368,28 @@ function Canvas() {
         }
       }
     } else { // when tool not selection
+
+      if (element && element.type == "text") {
+        const { x1, y1 } = element;
+        const offsetX = clientX - element.x1;
+        const offsetY = clientY - element.y1;
+        setSelectionElement({ ...element, offsetX, offsetY });
+        if (clientX - offsetX === x1 && clientY - offsetY === y1) {
+          setAction("writing");
+          return;
+        }
+      }
+
       const id = elements.length;
       const newElement = createElement(id, tool, clientX, clientY, clientX, clientY);
       setElements(pre => [...pre, newElement]);
-      setAction("drawing");
+      setSelectionElement(newElement);
+
+      if (tool == "text") {
+        setAction("writing");
+      } else {
+        setAction("drawing");
+      }
     }
   }
 
@@ -376,26 +415,28 @@ function Canvas() {
     } else if (action === "moving") {
 
       const { id, type } = selectionElement;
+      let newPoints;
       if (type === "freedraw") {
+
         const { points, xOffsets, yOffsets } = selectionElement;
-        const newPoints = points.map((_, i) => ({
+        newPoints = points.map((_, i) => ({
           x: clientX - xOffsets[i],
           y: clientY - yOffsets[i],
         }))
-        moveElement(elements[id], newPoints);
-      } else {
-        const { offsetX, offsetY, width, height } = selectionElement;
 
+      } else if (["line", "rectangle", "text"].includes(type)) {
+
+        const { offsetX, offsetY, width, height } = selectionElement;
         const newX1 = clientX - offsetX;
         const newY1 = clientY - offsetY;
-
-        const newPoints = {
+        newPoints = {
           x1: newX1, y1: newY1,
           x2: newX1 + width,
           y2: newY1 + height
         }
-        moveElement(elements[id], newPoints);
+
       }
+      moveElement(elements[id], newPoints);
 
     } else if (action === "resizing") {
       const { id, type, position, ...coordiantes } = selectionElement;
@@ -422,6 +463,11 @@ function Canvas() {
       if (x1 === x2 && y1 === y2) {
         undo();
       }
+      // if (selectionElement.value === textAreaRef.current.value) {
+      //   undo();
+      // }
+
+      if (action === "writing") return;
     }
 
 
@@ -461,6 +507,13 @@ function Canvas() {
           onChange={() => setTool("ellipse")}
         />
         <label htmlFor="ellipse">ellipse</label>
+
+        <input type="radio" name="text" id="text"
+          checked={tool === "text"}
+          onChange={() => setTool("text")}
+        />
+        <label htmlFor="text">Text</label>
+
       </div>
       <div className="fixed bottom-4 left-4">
         <button className="bg-blue-200 p-2 m-1 rounded-lg"
@@ -469,6 +522,14 @@ function Canvas() {
         <button className="bg-blue-200 p-2 m-1 rounded-lg"
           onClick={redo}>Redo</button>
       </div>
+      {action == "writing" &&
+        <textarea
+          ref={textAreaRef}
+          className="fixed bg-transparent  font-[consolas] outline-0 resize-none
+          wrap-break-word overflow-hidden whitespace-pre"
+          style={{ top: selectionElement.y1 - 5, left: selectionElement.x1 }}
+        >        </textarea>
+      }
       <canvas ref={canvasRef}
         className="bg-white"
         width={canvasSize.width}

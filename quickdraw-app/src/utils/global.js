@@ -21,8 +21,13 @@ const getSvgPathFromStroke = (points, closed = true) => {
   }
 
   if (closed) { result += 'Z' }
-  
+
   return result
+}
+// distance b/w 2 points
+const distance = (a, b) => {
+  return Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2))
 }
 
 export { getSvgPathFromStroke }
+export { distance, average }
