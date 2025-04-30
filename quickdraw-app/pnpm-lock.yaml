@@ -14,6 +14,9 @@ importers:
       perfect-freehand:
         specifier: ^1.2.2
         version: 1.2.2
+      points-on-curve:
+        specifier: ^1.0.1
+        version: 1.0.1
       react:
         specifier: ^19.0.0
         version: 19.1.0
@@ -1001,6 +1004,9 @@ packages:
   points-on-curve@0.2.0:
     resolution: {integrity: sha512-0mYKnYYe9ZcqMCWhUjItv/oHjvgEsfKvnUTg8sAtnHr3GVy7rGkXCb6d5cSyqrWqL4k81b9CPg3urd+T7aop3A==}
 
+  points-on-curve@1.0.1:
+    resolution: {integrity: sha512-3nmX4/LIiyuwGLwuUrfhTlDeQFlAhi7lyK/zcRNGhalwapDWgAGR82bUpmn2mA03vII3fvNCG8jAONzKXwpxAg==}
+
   points-on-path@0.2.1:
     resolution: {integrity: sha512-25ClnWWuw7JbWZcgqY/gJ4FQWadKxGWk+3kR/7kD0tCaDtPPMj7oHu2ToLaVhfpnHrZzYby2w6tUA0eOIuUg8g==}
 
@@ -1963,6 +1969,8 @@ snapshots:
   picomatch@4.0.2: {}
 
   points-on-curve@0.2.0: {}
+
+  points-on-curve@1.0.1: {}
 
   points-on-path@0.2.1:
     dependencies:

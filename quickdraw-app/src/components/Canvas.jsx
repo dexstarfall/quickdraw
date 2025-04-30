@@ -1,8 +1,9 @@
 import React, { useRef, useEffect, useState } from 'react';
 import rough from 'roughjs';
 import { getStroke } from 'perfect-freehand'
-import { getSvgPathFromStroke } from '../utils/global'
-import { distance } from '../utils/global'
+import { pointsOnBezierCurves } from 'points-on-curve';
+import { getSvgPathFromStroke } from '../../../packages/utils/global'
+import { distance } from '../../../packages/utils/global'
 
 // Logic for
 // Creation of Rough/freehand element 
@@ -49,6 +50,38 @@ const createElement = (id, type, x1, y1, x2, y2) => {
     throw new Error(`Type not found: ${type}`)
   }
 }
+// draw rough element or perfect-freehand
+const drawElement = (roughCanvas, canvasCtx, element) => {
+  const { type, points } = element;
+
+  // feature line curve in future
+  if (type === "future-line") {
+    const { x1, x2, y1, y2 } = element;
+    const curve = [[x1, y1], [x1 + 500, y1], [x2, y2], [x2, y2]];
+    const p1 = pointsOnBezierCurves(curve);
+    roughCanvas.curve(p1, { roughness: 0 });
+    return;
+  }
+
+  if (type === "line" || type === "rectangle" || type === "ellipse") {
+
+    roughCanvas.draw(element.roughElement);
+
+  } else if (type === "freedraw") {
+
+    const stroke = getSvgPathFromStroke(getStroke(points))
+    canvasCtx.fill(new Path2D(stroke))
+
+  } else if (type === "text") {
+
+    const { x1, y1, text } = element;
+    canvasCtx.font = "1rem consolas";
+    canvasCtx.textBaseline = "top";
+    // const xNew = x1 - canvasCtx.measureText(text).width / 2;
+    canvasCtx.fillText(text, x1, y1);
+
+  }
+}
 
 // Logic for
 // positionOnElement - onShape, start, end, tl, tr, bl, br
@@ -58,7 +91,6 @@ const createElement = (id, type, x1, y1, x2, y2) => {
 const nearPoint = (x, y, x1, y1, name) => {
   return Math.abs(x - x1) < 5 && Math.abs(y - y1) < 5 ? name : null;
 }
-
 // check -> 'click' on 'line b/w 2 points'
 const onLine = (mx, my, x1, y1, x2, y2, threshold = 1) => {
   const a = { x: x1, y: y1 };
@@ -107,10 +139,10 @@ const positionOnElement = (mx, my, element, threshold = 5) => {
   } else if (type == "text") {
     return mx >= x1 && mx <= x2 && my >= y1 && my <= y2 ? "onShape" : null;
   }
-};
-
+}
+// adjustment required on mouse up of shape
 const adjustmentRequired = (type) => ["line", "rectangle", "ellipse", "text"].includes(type);
-
+// if adjusment required passed ajust coordinates
 const adjustCoordinates = (element) => {
   const { type, x1, y1, x2, y2 } = element;
 
@@ -128,7 +160,7 @@ const adjustCoordinates = (element) => {
     return { x1: minX, y1: minY, x2: maxX, y2: maxY, };
   }
 }
-
+// cursor name according to cursor position
 const cursorForPosition = (position) => {
   switch (position) {
     case "tl":
@@ -144,7 +176,7 @@ const cursorForPosition = (position) => {
       return "move";
   }
 }
-
+// coordinates after resize
 const resizeCoordinates = (mX, mY, position, coordiantes) => {
   const { x1, y1, x2, y2 } = coordiantes;
 
@@ -159,7 +191,7 @@ const resizeCoordinates = (mX, mY, position, coordiantes) => {
   }
 }
 
-// undo and redo feature
+// undo and redo feature and all elements linked
 const useHistory = (initialState) => {
   const [index, setIndex] = useState(0);
   const [history, setHistory] = useState([initialState]); // [[], [{}], [{},{}]]
@@ -180,29 +212,33 @@ const useHistory = (initialState) => {
   const redo = () => index < history.length - 1 && setIndex(pre => pre + 1);
   return [history[index], setState, undo, redo];
 }
-// draw rough element or perfect-freehand
-const drawElement = (roughCanvas, canvasCtx, element) => {
-  const { type, points } = element;
+// keep track of keypress
+const usePressedKeys = () => {
+  const [pressedKeys, setPressedKeys] = useState(new Set());
 
-  if (type === "line" || type === "rectangle" || type === "ellipse") {
+  useEffect(() => {
+    const handleKeyDown = event => {
+      setPressedKeys(prevKeys => new Set(prevKeys).add(event.key));
+    };
 
-    roughCanvas.draw(element.roughElement);
+    const handleKeyUp = event => {
+      setPressedKeys(prevKeys => {
+        const updatedKeys = new Set(prevKeys);
+        updatedKeys.delete(event.key);
+        return updatedKeys;
+      });
+    };
 
-  } else if (type === "freedraw") {
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+    };
+  }, []);
 
-    const stroke = getSvgPathFromStroke(getStroke(points))
-    canvasCtx.fill(new Path2D(stroke))
-
-  } else if (type === "text") {
-
-    const { x1, y1, text } = element;
-    canvasCtx.font = "1rem consolas";
-    canvasCtx.textBaseline = "top";
-    // const xNew = x1 - canvasCtx.measureText(text).width / 2;
-    canvasCtx.fillText(text, x1, y1);
-
-  }
-}
+  return pressedKeys;
+};
 // for now get width height of perfect freehand tool
 const getDimension = (points) => {
   let minX = Infinity, minY = Infinity, maxX = 0, maxY = 0;
@@ -216,40 +252,49 @@ const getDimension = (points) => {
   const height = maxY - minY;
   return { width, height }
 }
+
 function Canvas() {
   const canvasRef = useRef(null);
   const textAreaRef = useRef();
+  const pressedKeys = usePressedKeys();
 
-  //  all shapes drawn in canvas (for now)
-  const [elements, setElements, undo, redo] = useHistory([]);
-
-  // none, drawing, moving,
-  const [action, setAction] = useState("none");
-  // slection, line, rectangle, ellipse
-  const [tool, setTool] = useState("text");
-
-  // currently selected element while moving (for now)
-  const [selectionElement, setSelectionElement] = useState(null);
   //current Canvas size
   const [canvasSize, setCanvasSize] = useState({
     width: window.innerWidth,
     height: window.innerHeight,
   });
+  //  all elements drawn in canvas 
+  const [elements, setElements, undo, redo] = useHistory([]);
+  // action -> none, drawing, moving,
+  const [action, setAction] = useState("none");
+  // slection, line, rectangle, ellipse
+  const [tool, setTool] = useState("hand");
+  //panoffset
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  // currently selected element while moving (for now)
+  const [startPanPosition, setStartPanPosition] = useState({ x: 0, y: 0 })
+  const [selectionElement, setSelectionElement] = useState(null);
 
   // rerender everytime any changes occurs
   useEffect(() => {
     const canvas = canvasRef.current;
     const canvasCtx = canvas.getContext('2d');
-    canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
     const roughCanvas = rough.canvas(canvas);
+
+    canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+
+    canvasCtx.save();
+    canvasCtx.translate(panOffset.x, panOffset.y);
+    // try
+    // canvasCtx.fillRect(500, 50, 10, 100);
 
     elements.forEach(elm => {
       // if (action === "writing" && selectionElement.id === elm.id) return;
 
       drawElement(roughCanvas, canvasCtx, elm)
     });
-
-  }, [canvasSize, elements, action, selectionElement]);
+    canvasCtx.restore();
+  }, [canvasSize, elements, action, selectionElement, panOffset]);
 
   //on window resize update canvas
   useEffect(() => {
@@ -284,11 +329,31 @@ function Canvas() {
     };
   }, [undo, redo]);
 
+  // pan functionality
+  useEffect(() => {
+    const onMouseWheelScroll = event => {
+      setPanOffset(pre => {
+        if (event.shiftKey) {
+          return { x: pre.x - event.deltaY, y: 0 }
+        } else {
+          return { x: 0, y: pre.y - event.deltaY }
+        }
+      })
+    };
+    document.addEventListener("wheel", onMouseWheelScroll);
+    return () => {
+      document.removeEventListener("wheel", onMouseWheelScroll);
+    };
+  }, []);
+
+  // textarea focus
   useEffect(() => {
     const textArea = textAreaRef.current;
     if (action === "writing") {
-      requestAnimationFrame(() => textArea.focus());
-      textArea.value = selectionElement.text;
+      requestAnimationFrame(() => {
+        textArea.focus()
+        textArea.value = selectionElement.text;
+      });
     }
   }, [action, selectionElement])
 
@@ -330,9 +395,21 @@ function Canvas() {
     setElements((pre => pre.map((elm, i) => i === id ? movedElement : elm)), true);
   }
 
+  const getMouseCoordinates = event => {
+    const x = event.clientX - panOffset.x
+    const y = event.clientY - panOffset.y
+    return { x, y }
+  }
+
   // mouse down
   const handleMouseDown = (event) => {
-    const { clientX, clientY } = event;
+    const { x: mouseX, y: mouseY } = getMouseCoordinates(event);
+
+    if (event.button === 1 || pressedKeys.has(" ")) {
+      setStartPanPosition({ x: mouseX, y: mouseY });
+      setAction("panning")
+      return;
+    }
 
     if (action === "writing") {
       const { id, type, x1, y1 } = selectionElement;
@@ -346,59 +423,72 @@ function Canvas() {
       return;
     }
 
-    const element = getElementAtPosition(clientX, clientY);
     if (tool === "selection") {
+      if (event.button === 0) {
+        const element = getElementAtPosition(mouseX, mouseY);
+        if (element) {
+          if (element.type === "freedraw") {
+            const xOffsets = element.points.map(point => mouseX - point.x);
+            const yOffsets = element.points.map(point => mouseY - point.y);
+            setSelectionElement({ ...element, xOffsets, yOffsets });
+          } else {
+            const offsetX = mouseX - element.x1;
+            const offsetY = mouseY - element.y1;
+            setSelectionElement({ ...element, offsetX, offsetY });
+          }
+          setElements(pre => pre);
 
-      if (element) {
-        if (element.type === "freedraw") {
-          const xOffsets = element.points.map(point => clientX - point.x);
-          const yOffsets = element.points.map(point => clientY - point.y);
-          setSelectionElement({ ...element, xOffsets, yOffsets });
-        } else {
-          const offsetX = clientX - element.x1;
-          const offsetY = clientY - element.y1;
-          setSelectionElement({ ...element, offsetX, offsetY });
-        }
-        setElements(pre => pre);
-
-        if (element.position === "onShape") {
-          setAction("moving");
-        } else {
-          setAction("resizing");
+          if (element.position === "onShape") {
+            setAction("moving");
+          } else {
+            setAction("resizing");
+          }
         }
       }
-    } else { // when tool not selection
-
+    } else if (tool === "text") { // when already written text is selected again
+      const element = getElementAtPosition(mouseX, mouseY);
       if (element && element.type == "text") {
         const { x1, y1 } = element;
-        const offsetX = clientX - element.x1;
-        const offsetY = clientY - element.y1;
+        const offsetX = mouseX - element.x1;
+        const offsetY = mouseY - element.y1;
         setSelectionElement({ ...element, offsetX, offsetY });
-        if (clientX - offsetX === x1 && clientY - offsetY === y1) {
+        if (mouseX - offsetX === x1 && mouseY - offsetY === y1) {
           setAction("writing");
           return;
         }
       }
-
+      // text elm creation here
       const id = elements.length;
-      const newElement = createElement(id, tool, clientX, clientY, clientX, clientY);
+      const newElement = createElement(id, tool, mouseX, mouseY, mouseX, mouseY);
       setElements(pre => [...pre, newElement]);
       setSelectionElement(newElement);
+      setAction("writing");
 
-      if (tool == "text") {
-        setAction("writing");
-      } else {
-        setAction("drawing");
-      }
+    } else if (["freedraw", "line", "rectangle"].includes(tool)) { // when tool not selection
+
+      // shape element creation here - line, rect, ellipse
+      const id = elements.length;
+      const newElement = createElement(id, tool, mouseX, mouseY, mouseX, mouseY);
+      setElements(pre => [...pre, newElement]);
+      setSelectionElement(newElement);
+      setAction("drawing");
+
+    } else if (tool === "hand") {
+      setStartPanPosition({ x: mouseX, y: mouseY });
+      setAction("panning")
+    }
+    else {
+      return
     }
   }
 
-  // mouse move
+  // on mouse move
   const handleMouseMove = (event) => {
-    const { clientX, clientY } = event;
+    const { x: mouseX, y: mouseY } = getMouseCoordinates(event);
 
+    // tools-> UX
     if (tool === "selection") {
-      const element = getElementAtPosition(clientX, clientY);
+      const element = getElementAtPosition(mouseX, mouseY);
 
       if (element) {
         event.target.style.cursor = cursorForPosition(element.position);
@@ -411,7 +501,7 @@ function Canvas() {
       const id = elements.length - 1;
       const { type, x1, y1 } = elements[id];
 
-      updateElement(id, type, x1, y1, clientX, clientY);
+      updateElement(id, type, x1, y1, mouseX, mouseY);
     } else if (action === "moving") {
 
       const { id, type } = selectionElement;
@@ -420,15 +510,15 @@ function Canvas() {
 
         const { points, xOffsets, yOffsets } = selectionElement;
         newPoints = points.map((_, i) => ({
-          x: clientX - xOffsets[i],
-          y: clientY - yOffsets[i],
+          x: mouseX - xOffsets[i],
+          y: mouseY - yOffsets[i],
         }))
 
       } else if (["line", "rectangle", "text"].includes(type)) {
 
         const { offsetX, offsetY, width, height } = selectionElement;
-        const newX1 = clientX - offsetX;
-        const newY1 = clientY - offsetY;
+        const newX1 = mouseX - offsetX;
+        const newY1 = mouseY - offsetY;
         newPoints = {
           x1: newX1, y1: newY1,
           x2: newX1 + width,
@@ -440,38 +530,50 @@ function Canvas() {
 
     } else if (action === "resizing") {
       const { id, type, position, ...coordiantes } = selectionElement;
-      const { x1, y1, x2, y2 } = resizeCoordinates(clientX, clientY, position, coordiantes);
+      const { x1, y1, x2, y2 } = resizeCoordinates(mouseX, mouseY, position, coordiantes);
       updateElement(id, type, x1, y1, x2, y2);
+    } else if (action === "panning") {
+      const deltaX = mouseX - startPanPosition.x;
+      const deltaY = mouseY - startPanPosition.y;
+      setPanOffset(pre => ({
+        x: pre.x + deltaX,
+        y: pre.y + deltaY
+      }))
+      return;
     }
   }
 
-  // mouse up
+  // on mouse up
   const handleMouseUp = () => {
-    const index = elements.length - 1;
-    const { id, type, x1, y1, x2, y2 } = elements[index];
+    if (["none"].includes(action)) return;
 
-    if (adjustmentRequired(type)) {
-      if (action === "drawing") {
-        const { x1, y1, x2, y2 } = adjustCoordinates(elements[id]);
+    if (selectionElement) {
 
-        updateElement(id, type, x1, y1, x2, y2);
-      } else if (action === "resizing") {
-        const { x1, y1, x2, y2 } = adjustCoordinates(elements[id]);
+      const index = elements.length - 1;
+      const { id, type, x1, y1, x2, y2 } = elements[index];
 
-        updateElement(index, type, x1, y1, x2, y2);
+      if (adjustmentRequired(type)) {
+        if (action === "drawing") {
+          const { x1, y1, x2, y2 } = adjustCoordinates(elements[id]);
+
+          updateElement(id, type, x1, y1, x2, y2);
+        } else if (action === "resizing") {
+          const { x1, y1, x2, y2 } = adjustCoordinates(elements[id]);
+
+          updateElement(id, type, x1, y1, x2, y2);
+        }
+        if (x1 === x2 && y1 === y2) {
+          undo();
+        }
+        // if (selectionElement.value === textAreaRef.current.value) {
+        //   undo();
+        // }
+
+        if (action === "writing") return;
       }
-      if (x1 === x2 && y1 === y2) {
-        undo();
-      }
-      // if (selectionElement.value === textAreaRef.current.value) {
-      //   undo();
-      // }
-
-      if (action === "writing") return;
     }
 
-
-    setAction("none");
+    setAction("none ");
     setSelectionElement(null);
   }
 
@@ -483,6 +585,12 @@ function Canvas() {
           onChange={() => setTool("selection")}
         />
         <label htmlFor="selection">Select</label>
+
+        <input type="radio" name="hand" id="hand"
+          checked={tool === "hand"}
+          onChange={() => setTool("hand")}
+        />
+        <label htmlFor="hand">Hand</label>
 
         <input type="radio" name="freedraw" id="freedraw"
           checked={tool === "freedraw"}
@@ -502,17 +610,17 @@ function Canvas() {
         />
         <label htmlFor="rectangle">Rectangle</label>
 
-        <input type="radio" name="ellipse" id="ellipse"
-          checked={tool === "ellipse"}
-          onChange={() => setTool("ellipse")}
-        />
-        <label htmlFor="ellipse">ellipse</label>
-
         <input type="radio" name="text" id="text"
           checked={tool === "text"}
           onChange={() => setTool("text")}
         />
         <label htmlFor="text">Text</label>
+
+        <input type="radio" name="ellipse" id="ellipse"
+          checked={tool === "ellipse"}
+          onChange={() => setTool("ellipse")}
+        />
+        <label htmlFor="ellipse">ellipse(indevelop)</label>
 
       </div>
       <div className="fixed bottom-4 left-4">
@@ -527,7 +635,10 @@ function Canvas() {
           ref={textAreaRef}
           className="fixed bg-transparent  font-[consolas] outline-0 resize-none
           wrap-break-word overflow-hidden whitespace-pre"
-          style={{ top: selectionElement.y1 - 5, left: selectionElement.x1 }}
+          style={{
+            left: selectionElement.x1,
+            top: selectionElement.y1 - 5
+          }}
         >        </textarea>
       }
       <canvas ref={canvasRef}
