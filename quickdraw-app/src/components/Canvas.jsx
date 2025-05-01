@@ -75,7 +75,7 @@ const drawElement = (roughCanvas, canvasCtx, element) => {
   } else if (type === "text") {
 
     const { x1, y1, text } = element;
-    canvasCtx.font = "1rem consolas";
+    canvasCtx.font = `24px consolas`;
     canvasCtx.textBaseline = "top";
     // const xNew = x1 - canvasCtx.measureText(text).width / 2;
     canvasCtx.fillText(text, x1, y1);
@@ -274,27 +274,39 @@ function Canvas() {
   // currently selected element while moving (for now)
   const [startPanPosition, setStartPanPosition] = useState({ x: 0, y: 0 })
   const [selectionElement, setSelectionElement] = useState(null);
+  //  scale functionality
+  const [scale, setScale] = useState(1);
+  const [scaleOffset, setScaleOffset] = useState({ x: 0, y: 0 });
 
   // rerender everytime any changes occurs
   useEffect(() => {
+    // ctx -> canvasContext, rc -> roughCanvas
     const canvas = canvasRef.current;
-    const canvasCtx = canvas.getContext('2d');
-    const roughCanvas = rough.canvas(canvas);
+    const ctx = canvas.getContext('2d');
+    const rc = rough.canvas(canvas);
 
-    canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    canvasCtx.save();
-    canvasCtx.translate(panOffset.x, panOffset.y);
-    // try
-    // canvasCtx.fillRect(500, 50, 10, 100);
+    const scaleWidth = canvas.width * scale;
+    const scaleHeight = canvas.height * scale;
+    const scaleOffsetX = (scaleWidth - canvas.width) / 2;
+    const scaleOffsetY = (scaleHeight - canvas.height) / 2;
+
+    setScaleOffset({ x: scaleOffsetX, y: scaleOffsetY });
+
+    ctx.save();
+    ctx.translate(panOffset.x * scale - scaleOffsetX, panOffset.y * scale - scaleOffsetY);
+    ctx.scale(scale, scale);
+    // test
+    ctx.fillRect(100, 50, 10, 100);
 
     elements.forEach(elm => {
       // if (action === "writing" && selectionElement.id === elm.id) return;
 
-      drawElement(roughCanvas, canvasCtx, elm)
+      drawElement(rc, ctx, elm)
     });
-    canvasCtx.restore();
-  }, [canvasSize, elements, action, selectionElement, panOffset]);
+    ctx.restore();
+  }, [canvasSize, elements, action, selectionElement, panOffset, scale]);
 
   //on window resize update canvas
   useEffect(() => {
@@ -329,22 +341,26 @@ function Canvas() {
     };
   }, [undo, redo]);
 
-  // pan functionality
+  // zoom + pan functionality
   useEffect(() => {
-    const onMouseWheelScroll = event => {
-      setPanOffset(pre => {
+    const mouseWheelHandler = event => {
+      const isZoomShortcut = event.ctrlKey || event.altKey || event.metaKey;
+      if (isZoomShortcut) {
+        event.preventDefault();
+        handleZoom(event.deltaY * -0.004)
+      } else {
         if (event.shiftKey) {
-          return { x: pre.x - event.deltaY, y: 0 }
+          setPanOffset(pre => ({ x: pre.x - event.deltaY, y: pre.y }))
         } else {
-          return { x: 0, y: pre.y - event.deltaY }
+          setPanOffset(pre => ({ x: pre.x, y: pre.y - event.deltaY }))
         }
-      })
+      }
     };
-    document.addEventListener("wheel", onMouseWheelScroll);
+    window.addEventListener("wheel", mouseWheelHandler, { passive: false });
     return () => {
-      document.removeEventListener("wheel", onMouseWheelScroll);
+      window.removeEventListener("wheel", mouseWheelHandler);
     };
-  }, []);
+  }, [pressedKeys]);
 
   // textarea focus
   useEffect(() => {
@@ -396,8 +412,8 @@ function Canvas() {
   }
 
   const getMouseCoordinates = event => {
-    const x = event.clientX - panOffset.x
-    const y = event.clientY - panOffset.y
+    const x = (event.clientX - panOffset.x * scale + scaleOffset.x) / scale;
+    const y = (event.clientY - panOffset.y * scale + scaleOffset.y) / scale;
     return { x, y }
   }
 
@@ -419,6 +435,8 @@ function Canvas() {
       const width = canvasRef.current.getContext('2d').measureText(options.text).width;
       const height = 16;
       updateElement(id, type, x1, y1, x1 + width, y1 + height, options);
+      console.log(width)
+      console.log(elements)
       setAction("none");
       return;
     }
@@ -577,6 +595,9 @@ function Canvas() {
     setSelectionElement(null);
   }
 
+  const handleZoom = (delta) => {
+    setScale(pre => Math.min(Math.max(pre + delta, 0.1), 10))
+  }
   return (
     <>
       <div className="fixed">
@@ -625,6 +646,15 @@ function Canvas() {
       </div>
       <div className="fixed bottom-4 left-4">
         <button className="bg-blue-200 p-2 m-1 rounded-lg"
+          onClick={() => handleZoom(-0.1)}>-</button>
+        <button className="bg-blue-200 p-2 m-1 rounded-lg"
+          // onClick={() => setScale(1)}> {new Intl.NumberFormat("en-GB", { style: "percent" }).format(scale)}
+          onClick={() => setScale(1)}> {(scale * 100).toFixed(0) + "%"}
+        </button>
+        <button className="bg-blue-200 p-2 m-1 rounded-lg"
+          onClick={() => handleZoom(0.1)}>+</button>
+
+        <button className="bg-blue-200 p-2 m-1 rounded-lg"
           onClick={undo}>Undo</button>
 
         <button className="bg-blue-200 p-2 m-1 rounded-lg"
@@ -633,11 +663,12 @@ function Canvas() {
       {action == "writing" &&
         <textarea
           ref={textAreaRef}
-          className="fixed bg-transparent  font-[consolas] outline-0 resize-none
+          className="fixed bg-transparent outline-0 resize-none
           wrap-break-word overflow-hidden whitespace-pre"
           style={{
-            left: selectionElement.x1,
-            top: selectionElement.y1 - 5
+            font: `${24 * scale}px consolas`,
+            left: selectionElement.x1 * scale + panOffset.x * scale - scaleOffset.x,
+            top: (selectionElement.y1 - 5.5) * scale + panOffset.y * scale - scaleOffset.y
           }}
         >        </textarea>
       }
