@@ -87,11 +87,21 @@ const drawElement = (rc, ctx, element) => {
 // positionOnElement - onShape, start, end, tl, tr, bl, br
 // -------------------------------------------------------
 
-// check -> 'click' on 'point' 
-const nearPoint = (x, y, x1, y1, name) => {
-  return Math.abs(x - x1) < 5 && Math.abs(y - y1) < 5 ? name : null;
+
+// check -> 'click' on 'corner point' 
+const nearPoint = (mx, my, x, y, name) => {
+  return Math.abs(mx - x) < 5 && Math.abs(my - y) < 5 ? name : null;
 }
-// check -> 'click' on 'line b/w 2 points'
+const onCorner = (mx, my, x1, y1, x2, y2) => {
+  const topLeft = nearPoint(mx, my, x1, y1, "tl");
+  const topRight = nearPoint(mx, my, x2, y1, "tr");
+  const bottomLeft = nearPoint(mx, my, x1, y2, "bl");
+  const bottomRight = nearPoint(mx, my, x2, y2, "br");
+
+  return topLeft || topRight || bottomLeft || bottomRight;
+}
+
+// check -> 'click' on 'line, rectangle, ellipse '
 const onLine = (mx, my, x1, y1, x2, y2, threshold = 1) => {
   const a = { x: x1, y: y1 };
   const b = { x: x2, y: y2 };
@@ -99,7 +109,6 @@ const onLine = (mx, my, x1, y1, x2, y2, threshold = 1) => {
   const offset = distance(a, b) - (distance(a, c) + distance(b, c));
   return Math.abs(offset) < threshold ? "onShape" : null;
 }
-// check -> 'click' on 'edge of rectangle'
 const onRectangle = (mx, my, x1, y1, x2, y2, threshold = 5) => {
   const nearLeft = Math.abs(mx - x1) <= threshold && my >= y1 && my <= y2;
   const nearRight = Math.abs(mx - x2) <= threshold && my >= y1 && my <= y2;
@@ -108,18 +117,28 @@ const onRectangle = (mx, my, x1, y1, x2, y2, threshold = 5) => {
 
   return nearLeft || nearRight || nearTop || nearBottom ? "onShape" : null;
 }
+const onEllipse = (mx, my, x1, y1, x2, y2, threshold = 0.1) => {
+  const width = Math.abs(x2 - x1) / 2;
+  const height = Math.abs(y2 - y1) / 2;
+  const centerX = (x1 + x2) / 2;
+  const centerY = (y1 + y2) / 2;
+  // Normalize the mouse position to the ellipse center
+  const dx = (mx - centerX) / width;
+  const dy = (my - centerY) / height;
+  // The ellipse equation: dx² + dy² = 1 
+  const distance = Math.abs((dx * dx + dy * dy) - 1);
+  return distance < threshold ? "onShape" : null;
+};
+
 // when no shape is selected check -> 'click' on 'edge of element'
-const positionOnElement = (mx, my, element, threshold = 5) => {
+const positionOnElement = (mx, my, element) => {
   const { type, x1, y1, x2, y2 } = element;
 
   if (type === "rectangle") {
-    const topLeft = nearPoint(mx, my, x1, y1, "tl");
-    const topRight = nearPoint(mx, my, x2, y1, "tr");
-    const bottomLeft = nearPoint(mx, my, x1, y2, "bl");
-    const bottomRight = nearPoint(mx, my, x2, y2, "br");
 
-    const on = onRectangle(mx, my, x1, y1, x2, y2, threshold);
-    return topLeft || topRight || bottomLeft || bottomRight || on;
+    const onRectangleCorner = onCorner(mx, my, x1, y1, x2, y2)
+    const on = onRectangle(mx, my, x1, y1, x2, y2);
+    return onRectangleCorner || on;
 
   } else if (type === "line") {
     const start = nearPoint(mx, my, x1, y1, "start");
@@ -127,6 +146,12 @@ const positionOnElement = (mx, my, element, threshold = 5) => {
 
     const on = onLine(mx, my, x1, y1, x2, y2);
     return start || end || on;
+
+  } else if (type === "ellipse") {
+
+    const onEllipseCorner = onCorner(mx, my, x1, y1, x2, y2);
+    const on = onEllipse(mx, my, x1, y1, x2, y2);
+    return onEllipseCorner || on;
 
   } else if (type === "freedraw") {
     const betweenAnyPoints = element.points.some((point, i) => {
@@ -138,6 +163,22 @@ const positionOnElement = (mx, my, element, threshold = 5) => {
     return betweenAnyPoints ? "onShape" : null;
   } else if (type == "text") {
     return mx >= x1 && mx <= x2 && my >= y1 && my <= y2 ? "onShape" : null;
+  }
+}
+// cursor name according to cursor position
+const cursorForPosition = (position) => {
+  switch (position) {
+    case "tl":
+    case "br":
+      return "nwse-resize"
+    case "tr":
+    case "bl":
+      return "nesw-resize"
+    case "start":
+    case "end":
+      return "pointer"
+    default:
+      return "move";
   }
 }
 // if adjusment required passed ajust coordinates
@@ -156,22 +197,8 @@ const adjustCoordinates = (element) => {
       return { x1: minX, y1: maxY, x2: maxX, y2: minY };
     }
     return { x1: minX, y1: minY, x2: maxX, y2: maxY, };
-  }
-}
-// cursor name according to cursor position
-const cursorForPosition = (position) => {
-  switch (position) {
-    case "tl":
-    case "br":
-      return "nwse-resize"
-    case "tr":
-    case "bl":
-      return "nesw-resize"
-    case "start":
-    case "end":
-      return "pointer"
-    default:
-      return "move";
+  } else if (type === "ellipse") {
+    return { x1: minX, y1: minY, x2: maxX, y2: maxY, };
   }
 }
 // coordinates after resize
@@ -265,7 +292,7 @@ function Canvas() {
   // action -> none, drawing, moving,
   const [action, setAction] = useState("none");
   // slection, line, rectangle, ellipse
-  const [tool, setTool] = useState("hand");
+  const [tool, setTool] = useState("ellipse");
   //panoffset
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
   // currently selected element while moving (for now)
@@ -468,8 +495,7 @@ function Canvas() {
       setSelectionElement(newElement);
       setAction("writing");
 
-    } else if (["freedraw", "line", "rectangle"].includes(tool)) { // when tool not selection
-
+    } else if (["freedraw", "line", "rectangle", "ellipse"].includes(tool)) { // when tool not selection
       // shape element creation here - line, rect, ellipse
       const id = elements.length;
       const newElement = createElement(id, tool, mouseX, mouseY, mouseX, mouseY);
@@ -518,7 +544,7 @@ function Canvas() {
           y: mouseY - yOffsets[i],
         }))
 
-      } else if (["line", "rectangle", "text"].includes(type)) {
+      } else if (["line", "rectangle", "ellipse", "text"].includes(type)) {
 
         const { offsetX, offsetY, width, height } = selectionElement;
         const newX1 = mouseX - offsetX;
