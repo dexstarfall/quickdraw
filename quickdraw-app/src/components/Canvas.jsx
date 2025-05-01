@@ -51,7 +51,7 @@ const createElement = (id, type, x1, y1, x2, y2) => {
   }
 }
 // draw rough element or perfect-freehand
-const drawElement = (roughCanvas, canvasCtx, element) => {
+const drawElement = (rc, ctx, element) => {
   const { type, points } = element;
 
   // feature line curve in future
@@ -59,26 +59,26 @@ const drawElement = (roughCanvas, canvasCtx, element) => {
     const { x1, x2, y1, y2 } = element;
     const curve = [[x1, y1], [x1 + 500, y1], [x2, y2], [x2, y2]];
     const p1 = pointsOnBezierCurves(curve);
-    roughCanvas.curve(p1, { roughness: 0 });
+    rc.curve(p1, { roughness: 0 });
     return;
   }
 
   if (type === "line" || type === "rectangle" || type === "ellipse") {
 
-    roughCanvas.draw(element.roughElement);
+    rc.draw(element.roughElement);
 
   } else if (type === "freedraw") {
 
     const stroke = getSvgPathFromStroke(getStroke(points))
-    canvasCtx.fill(new Path2D(stroke))
+    ctx.fill(new Path2D(stroke))
 
   } else if (type === "text") {
 
     const { x1, y1, text } = element;
-    canvasCtx.font = `24px consolas`;
-    canvasCtx.textBaseline = "top";
-    // const xNew = x1 - canvasCtx.measureText(text).width / 2;
-    canvasCtx.fillText(text, x1, y1);
+    // ctx.textBaseline = "top";
+    ctx.fillText(text, x1, y1);
+
+    // ctx.fillRect(x1, y1, xNew, 24);
 
   }
 }
@@ -140,8 +140,6 @@ const positionOnElement = (mx, my, element, threshold = 5) => {
     return mx >= x1 && mx <= x2 && my >= y1 && my <= y2 ? "onShape" : null;
   }
 }
-// adjustment required on mouse up of shape
-const adjustmentRequired = (type) => ["line", "rectangle", "ellipse", "text"].includes(type);
 // if adjusment required passed ajust coordinates
 const adjustCoordinates = (element) => {
   const { type, x1, y1, x2, y2 } = element;
@@ -190,7 +188,6 @@ const resizeCoordinates = (mX, mY, position, coordiantes) => {
     default: null; // fallback: will not get here
   }
 }
-
 // undo and redo feature and all elements linked
 const useHistory = (initialState) => {
   const [index, setIndex] = useState(0);
@@ -287,21 +284,20 @@ function Canvas() {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    const scaleWidth = canvas.width * scale;
-    const scaleHeight = canvas.height * scale;
-    const scaleOffsetX = (scaleWidth - canvas.width) / 2;
-    const scaleOffsetY = (scaleHeight - canvas.height) / 2;
+    // const scaleWidth = canvas.width * scale;
+    // const scaleHeight = canvas.height * scale;
+    // const scaleOffsetX = (scaleWidth - canvas.width) / 2;
+    // const scaleOffsetY = (scaleHeight - canvas.height) / 2;
+    const scaleOffsetX = (canvas.width / 2) * (scale - 1);
+    const scaleOffsetY = (canvas.height / 2) * (scale - 1);
 
     setScaleOffset({ x: scaleOffsetX, y: scaleOffsetY });
-
     ctx.save();
     ctx.translate(panOffset.x * scale - scaleOffsetX, panOffset.y * scale - scaleOffsetY);
     ctx.scale(scale, scale);
-    // test
-    ctx.fillRect(100, 50, 10, 100);
-
     elements.forEach(elm => {
-      // if (action === "writing" && selectionElement.id === elm.id) return;
+      //  when re-editing text hide canvas text
+      if (action === "writing" && selectionElement.id === elm.id) return;
 
       drawElement(rc, ctx, elm)
     });
@@ -362,7 +358,7 @@ function Canvas() {
     };
   }, [pressedKeys]);
 
-  // textarea focus
+  // textarea focus when load in text
   useEffect(() => {
     const textArea = textAreaRef.current;
     if (action === "writing") {
@@ -428,16 +424,6 @@ function Canvas() {
     }
 
     if (action === "writing") {
-      const { id, type, x1, y1 } = selectionElement;
-      const options = {
-        text: textAreaRef.current.value
-      }
-      const width = canvasRef.current.getContext('2d').measureText(options.text).width;
-      const height = 16;
-      updateElement(id, type, x1, y1, x1 + width, y1 + height, options);
-      console.log(width)
-      console.log(elements)
-      setAction("none");
       return;
     }
 
@@ -566,11 +552,10 @@ function Canvas() {
     if (["none"].includes(action)) return;
 
     if (selectionElement) {
-
       const index = elements.length - 1;
       const { id, type, x1, y1, x2, y2 } = elements[index];
 
-      if (adjustmentRequired(type)) {
+      if (["line", "rectangle", "ellipse"].includes(type)) {
         if (action === "drawing") {
           const { x1, y1, x2, y2 } = adjustCoordinates(elements[id]);
 
@@ -583,16 +568,34 @@ function Canvas() {
         if (x1 === x2 && y1 === y2) {
           undo();
         }
-        // if (selectionElement.value === textAreaRef.current.value) {
-        //   undo();
-        // }
-
+      } else if (type === "text") {
         if (action === "writing") return;
       }
     }
 
     setAction("none ");
     setSelectionElement(null);
+  }
+
+  // when text area is out of focus
+  const handleBlur = () => {
+    const { id, type, x1, y1 } = selectionElement;
+    const options = {
+      text: textAreaRef.current.value
+    }
+    const ctx = canvasRef.current.getContext('2d')
+    ctx.font = `20px consolas`;
+    ctx.textBaseline = "top";
+    const x2 = x1 + ctx.measureText(options.text).width;
+    const y2 = y1 + 16;
+    updateElement(id, type, x1, y1, x2, y2, options);
+
+    setAction("none");
+    setSelectionElement(null);
+
+    if (selectionElement.text === options.text) {
+      undo();
+    }
   }
 
   const handleZoom = (delta) => {
@@ -641,7 +644,7 @@ function Canvas() {
           checked={tool === "ellipse"}
           onChange={() => setTool("ellipse")}
         />
-        <label htmlFor="ellipse">ellipse(indevelop)</label>
+        <label htmlFor="ellipse">ellipse</label>
 
       </div>
       <div className="fixed bottom-4 left-4">
@@ -663,10 +666,11 @@ function Canvas() {
       {action == "writing" &&
         <textarea
           ref={textAreaRef}
+          onBlur={handleBlur}
           className="fixed bg-transparent outline-0 resize-none
           wrap-break-word overflow-hidden whitespace-pre"
           style={{
-            font: `${24 * scale}px consolas`,
+            font: `${20 * scale}px consolas`,
             left: selectionElement.x1 * scale + panOffset.x * scale - scaleOffset.x,
             top: (selectionElement.y1 - 5.5) * scale + panOffset.y * scale - scaleOffset.y
           }}
