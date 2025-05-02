@@ -1,7 +1,7 @@
 {
   "name": "quickdraw-app",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -16,7 +16,8 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "roughjs": "^4.6.6",
-    "tailwindcss": "^4.1.4"
+    "tailwindcss": "^4.1.4",
+    "zustand": "^5.0.4"
   },
   "devDependencies": {
     "@eslint/js": "^9.22.0",

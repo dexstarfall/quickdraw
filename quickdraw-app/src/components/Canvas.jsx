@@ -1,9 +1,11 @@
 import React, { useRef, useEffect, useState } from 'react';
 import rough from 'roughjs';
-import { getStroke } from 'perfect-freehand'
-import { pointsOnBezierCurves } from 'points-on-curve';
-import { getSvgPathFromStroke } from '@utils/global'
-import { distance } from '@utils/global'
+
+import StaticCanvas from './Canvases/StaticCanvas';
+import InteractiveCanvas from './canvases/interactiveCanvas';
+import ToolBar from './ToolBar';
+import BottomBar from './BottomBar';
+import TextField from './TextField';
 
 // Logic for
 // Creation of Rough/freehand element 
@@ -50,171 +52,7 @@ const createElement = (id, type, x1, y1, x2, y2) => {
     throw new Error(`Type not found: ${type}`)
   }
 }
-// draw rough element or perfect-freehand
-const drawElement = (rc, ctx, element) => {
-  const { type, points } = element;
 
-  // feature line curve in future
-  if (type === "future-line") {
-    const { x1, x2, y1, y2 } = element;
-    const curve = [[x1, y1], [x1 + 500, y1], [x2, y2], [x2, y2]];
-    const p1 = pointsOnBezierCurves(curve);
-    rc.curve(p1, { roughness: 0 });
-    return;
-  }
-
-  if (type === "line" || type === "rectangle" || type === "ellipse") {
-
-    rc.draw(element.roughElement);
-
-  } else if (type === "freedraw") {
-
-    const stroke = getSvgPathFromStroke(getStroke(points))
-    ctx.fill(new Path2D(stroke))
-
-  } else if (type === "text") {
-
-    const { x1, y1, text } = element;
-    // ctx.textBaseline = "top";
-    ctx.fillText(text, x1, y1);
-
-    // ctx.fillRect(x1, y1, xNew, 24);
-
-  }
-}
-
-// Logic for
-// positionOnElement - onShape, start, end, tl, tr, bl, br
-// -------------------------------------------------------
-
-
-// check -> 'click' on 'corner point' 
-const nearPoint = (mx, my, x, y, name) => {
-  return Math.abs(mx - x) < 5 && Math.abs(my - y) < 5 ? name : null;
-}
-const onCorner = (mx, my, x1, y1, x2, y2) => {
-  const topLeft = nearPoint(mx, my, x1, y1, "tl");
-  const topRight = nearPoint(mx, my, x2, y1, "tr");
-  const bottomLeft = nearPoint(mx, my, x1, y2, "bl");
-  const bottomRight = nearPoint(mx, my, x2, y2, "br");
-
-  return topLeft || topRight || bottomLeft || bottomRight;
-}
-
-// check -> 'click' on 'line, rectangle, ellipse '
-const onLine = (mx, my, x1, y1, x2, y2, threshold = 1) => {
-  const a = { x: x1, y: y1 };
-  const b = { x: x2, y: y2 };
-  const c = { x: mx, y: my };
-  const offset = distance(a, b) - (distance(a, c) + distance(b, c));
-  return Math.abs(offset) < threshold ? "onShape" : null;
-}
-const onRectangle = (mx, my, x1, y1, x2, y2, threshold = 5) => {
-  const nearLeft = Math.abs(mx - x1) <= threshold && my >= y1 && my <= y2;
-  const nearRight = Math.abs(mx - x2) <= threshold && my >= y1 && my <= y2;
-  const nearTop = Math.abs(my - y1) <= threshold && mx >= x1 && mx <= x2;
-  const nearBottom = Math.abs(my - y2) <= threshold && mx >= x1 && mx <= x2;
-
-  return nearLeft || nearRight || nearTop || nearBottom ? "onShape" : null;
-}
-const onEllipse = (mx, my, x1, y1, x2, y2, threshold = 0.1) => {
-  const width = Math.abs(x2 - x1) / 2;
-  const height = Math.abs(y2 - y1) / 2;
-  const centerX = (x1 + x2) / 2;
-  const centerY = (y1 + y2) / 2;
-  // Normalize the mouse position to the ellipse center
-  const dx = (mx - centerX) / width;
-  const dy = (my - centerY) / height;
-  // The ellipse equation: dx² + dy² = 1 
-  const distance = Math.abs((dx * dx + dy * dy) - 1);
-  return distance < threshold ? "onShape" : null;
-};
-
-// when no shape is selected check -> 'click' on 'edge of element'
-const positionOnElement = (mx, my, element) => {
-  const { type, x1, y1, x2, y2 } = element;
-
-  if (type === "rectangle") {
-
-    const onRectangleCorner = onCorner(mx, my, x1, y1, x2, y2)
-    const on = onRectangle(mx, my, x1, y1, x2, y2);
-    return onRectangleCorner || on;
-
-  } else if (type === "line") {
-    const start = nearPoint(mx, my, x1, y1, "start");
-    const end = nearPoint(mx, my, x2, y2, "end");
-
-    const on = onLine(mx, my, x1, y1, x2, y2);
-    return start || end || on;
-
-  } else if (type === "ellipse") {
-
-    const onEllipseCorner = onCorner(mx, my, x1, y1, x2, y2);
-    const on = onEllipse(mx, my, x1, y1, x2, y2);
-    return onEllipseCorner || on;
-
-  } else if (type === "freedraw") {
-    const betweenAnyPoints = element.points.some((point, i) => {
-      const nextPoint = element.points[i + 1]; // [{x,y},{x,y}, ....]
-
-      if (!nextPoint) { return false; }
-      return onLine(mx, my, point.x, point.y, nextPoint.x, nextPoint.y, 10) != null;
-    })
-    return betweenAnyPoints ? "onShape" : null;
-  } else if (type == "text") {
-    return mx >= x1 && mx <= x2 && my >= y1 && my <= y2 ? "onShape" : null;
-  }
-}
-// cursor name according to cursor position
-const cursorForPosition = (position) => {
-  switch (position) {
-    case "tl":
-    case "br":
-      return "nwse-resize"
-    case "tr":
-    case "bl":
-      return "nesw-resize"
-    case "start":
-    case "end":
-      return "pointer"
-    default:
-      return "move";
-  }
-}
-// if adjusment required passed ajust coordinates
-const adjustCoordinates = (element) => {
-  const { type, x1, y1, x2, y2 } = element;
-
-  const minX = Math.min(x1, x2);
-  const minY = Math.min(y1, y2);
-  const maxX = Math.max(x1, x2);
-  const maxY = Math.max(y1, y2);
-
-  if (type === "rectangle") {
-    return { x1: minX, y1: minY, x2: maxX, y2: maxY, };
-  } else if (type === "line") {
-    if ((x1 < x2 && y1 > y2) || (x1 > x2 && y1 < y2)) {
-      return { x1: minX, y1: maxY, x2: maxX, y2: minY };
-    }
-    return { x1: minX, y1: minY, x2: maxX, y2: maxY, };
-  } else if (type === "ellipse") {
-    return { x1: minX, y1: minY, x2: maxX, y2: maxY, };
-  }
-}
-// coordinates after resize
-const resizeCoordinates = (mX, mY, position, coordiantes) => {
-  const { x1, y1, x2, y2 } = coordiantes;
-
-  switch (position) {
-    case "tl": return { x1: mX, y1: mY, x2, y2 };
-    case "tr": return { x1, y1: mY, x2: mX, y2 };
-    case "bl": return { x1: mX, y1, x2, y2: mY };
-    case "br": return { x1, y1, x2: mX, y2: mY };
-    case "start": return { x1: mX, y1: mY, x2, y2 };
-    case "end": return { x1, y1, x2: mX, y2: mY };
-    default: null; // fallback: will not get here
-  }
-}
 // undo and redo feature and all elements linked
 const useHistory = (initialState) => {
   const [index, setIndex] = useState(0);
@@ -278,7 +116,8 @@ const getDimension = (points) => {
 }
 
 function Canvas() {
-  const canvasRef = useRef(null);
+  const staticCanvasRef = useRef(null);
+  const interactiveCanvasRef = useRef(null);
   const textAreaRef = useRef();
   const pressedKeys = usePressedKeys();
 
@@ -292,7 +131,7 @@ function Canvas() {
   // action -> none, drawing, moving,
   const [action, setAction] = useState("none");
   // slection, line, rectangle, ellipse
-  const [tool, setTool] = useState("ellipse");
+  const [tool, setTool] = useState("freedraw");
   //panoffset
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
   // currently selected element while moving (for now)
@@ -301,35 +140,6 @@ function Canvas() {
   //  scale functionality
   const [scale, setScale] = useState(1);
   const [scaleOffset, setScaleOffset] = useState({ x: 0, y: 0 });
-
-  // rerender everytime any changes occurs
-  useEffect(() => {
-    // ctx -> canvasContext, rc -> roughCanvas
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    const rc = rough.canvas(canvas);
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // const scaleWidth = canvas.width * scale;
-    // const scaleHeight = canvas.height * scale;
-    // const scaleOffsetX = (scaleWidth - canvas.width) / 2;
-    // const scaleOffsetY = (scaleHeight - canvas.height) / 2;
-    const scaleOffsetX = (canvas.width / 2) * (scale - 1);
-    const scaleOffsetY = (canvas.height / 2) * (scale - 1);
-
-    setScaleOffset({ x: scaleOffsetX, y: scaleOffsetY });
-    ctx.save();
-    ctx.translate(panOffset.x * scale - scaleOffsetX, panOffset.y * scale - scaleOffsetY);
-    ctx.scale(scale, scale);
-    elements.forEach(elm => {
-      //  when re-editing text hide canvas text
-      if (action === "writing" && selectionElement.id === elm.id) return;
-
-      drawElement(rc, ctx, elm)
-    });
-    ctx.restore();
-  }, [canvasSize, elements, action, selectionElement, panOffset, scale]);
 
   //on window resize update canvas
   useEffect(() => {
@@ -345,24 +155,6 @@ function Canvas() {
       window.removeEventListener('resize', handleResize);
     };
   }, []);
-
-  // undo redo functionality
-  useEffect(() => {
-    const undoRedoFunction = event => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "z") {
-        if (event.shiftKey) {
-          redo();
-        } else {
-          undo();
-        }
-      }
-    };
-
-    document.addEventListener("keydown", undoRedoFunction);
-    return () => {
-      document.removeEventListener("keydown", undoRedoFunction);
-    };
-  }, [undo, redo]);
 
   // zoom + pan functionality
   useEffect(() => {
@@ -388,20 +180,14 @@ function Canvas() {
   // textarea focus when load in text
   useEffect(() => {
     const textArea = textAreaRef.current;
-    if (action === "writing") {
+    if (action === "writing" && selectionElement) {
       requestAnimationFrame(() => {
         textArea.focus()
-        textArea.value = selectionElement.text;
+        textArea.value = selectionElement.text || "";
       });
     }
-  }, [action, selectionElement])
 
-  // return element at position
-  const getElementAtPosition = (x, y) => {
-    return elements
-      .map(element => ({ ...element, position: positionOnElement(x, y, element) }))
-      .find(element => element.position !== null);
-  }
+  }, [action, selectionElement])
 
   // update Shape
   const updateElement = (id, type, x1, y1, x2, y2, options) => {
@@ -420,296 +206,74 @@ function Canvas() {
     }
     setElements((pre => pre.map((elm, i) => i === id ? updatedElement : elm)), true);
   }
-
-  const moveElement = (element, newPoints) => {
-    const { id, type } = element;
-    let movedElement;
-    if (type === "freedraw") {
-      movedElement = { ...element, points: newPoints };
-    } else {
-      const { x1, y1, x2, y2 } = newPoints
-      movedElement = createElement(id, type, x1, y1, x2, y2);
-      movedElement.text = element.text;
-    }
-    setElements((pre => pre.map((elm, i) => i === id ? movedElement : elm)), true);
-  }
-
-  const getMouseCoordinates = event => {
-    const x = (event.clientX - panOffset.x * scale + scaleOffset.x) / scale;
-    const y = (event.clientY - panOffset.y * scale + scaleOffset.y) / scale;
-    return { x, y }
-  }
-
-  // mouse down
-  const handleMouseDown = (event) => {
-    const { x: mouseX, y: mouseY } = getMouseCoordinates(event);
-
-    if (event.button === 1 || pressedKeys.has(" ")) {
-      setStartPanPosition({ x: mouseX, y: mouseY });
-      setAction("panning")
-      return;
-    }
-
-    if (action === "writing") {
-      return;
-    }
-
-    if (tool === "selection") {
-      if (event.button === 0) {
-        const element = getElementAtPosition(mouseX, mouseY);
-        if (element) {
-          if (element.type === "freedraw") {
-            const xOffsets = element.points.map(point => mouseX - point.x);
-            const yOffsets = element.points.map(point => mouseY - point.y);
-            setSelectionElement({ ...element, xOffsets, yOffsets });
-          } else {
-            const offsetX = mouseX - element.x1;
-            const offsetY = mouseY - element.y1;
-            setSelectionElement({ ...element, offsetX, offsetY });
-          }
-          setElements(pre => pre);
-
-          if (element.position === "onShape") {
-            setAction("moving");
-          } else {
-            setAction("resizing");
-          }
-        }
-      }
-    } else if (tool === "text") { // when already written text is selected again
-      const element = getElementAtPosition(mouseX, mouseY);
-      if (element && element.type == "text") {
-        const { x1, y1 } = element;
-        const offsetX = mouseX - element.x1;
-        const offsetY = mouseY - element.y1;
-        setSelectionElement({ ...element, offsetX, offsetY });
-        if (mouseX - offsetX === x1 && mouseY - offsetY === y1) {
-          setAction("writing");
-          return;
-        }
-      }
-      // text elm creation here
-      const id = elements.length;
-      const newElement = createElement(id, tool, mouseX, mouseY, mouseX, mouseY);
-      setElements(pre => [...pre, newElement]);
-      setSelectionElement(newElement);
-      setAction("writing");
-
-    } else if (["freedraw", "line", "rectangle", "ellipse"].includes(tool)) { // when tool not selection
-      // shape element creation here - line, rect, ellipse
-      const id = elements.length;
-      const newElement = createElement(id, tool, mouseX, mouseY, mouseX, mouseY);
-      setElements(pre => [...pre, newElement]);
-      setSelectionElement(newElement);
-      setAction("drawing");
-
-    } else if (tool === "hand") {
-      setStartPanPosition({ x: mouseX, y: mouseY });
-      setAction("panning")
-    }
-    else {
-      return
-    }
-  }
-
-  // on mouse move
-  const handleMouseMove = (event) => {
-    const { x: mouseX, y: mouseY } = getMouseCoordinates(event);
-
-    // tools-> UX
-    if (tool === "selection") {
-      const element = getElementAtPosition(mouseX, mouseY);
-
-      if (element) {
-        event.target.style.cursor = cursorForPosition(element.position);
-      } else {
-        event.target.style.cursor = "default";
-      }
-    }
-
-    if (action === "drawing") {
-      const id = elements.length - 1;
-      const { type, x1, y1 } = elements[id];
-
-      updateElement(id, type, x1, y1, mouseX, mouseY);
-    } else if (action === "moving") {
-
-      const { id, type } = selectionElement;
-      let newPoints;
-      if (type === "freedraw") {
-
-        const { points, xOffsets, yOffsets } = selectionElement;
-        newPoints = points.map((_, i) => ({
-          x: mouseX - xOffsets[i],
-          y: mouseY - yOffsets[i],
-        }))
-
-      } else if (["line", "rectangle", "ellipse", "text"].includes(type)) {
-
-        const { offsetX, offsetY, width, height } = selectionElement;
-        const newX1 = mouseX - offsetX;
-        const newY1 = mouseY - offsetY;
-        newPoints = {
-          x1: newX1, y1: newY1,
-          x2: newX1 + width,
-          y2: newY1 + height
-        }
-
-      }
-      moveElement(elements[id], newPoints);
-
-    } else if (action === "resizing") {
-      const { id, type, position, ...coordiantes } = selectionElement;
-      const { x1, y1, x2, y2 } = resizeCoordinates(mouseX, mouseY, position, coordiantes);
-      updateElement(id, type, x1, y1, x2, y2);
-    } else if (action === "panning") {
-      const deltaX = mouseX - startPanPosition.x;
-      const deltaY = mouseY - startPanPosition.y;
-      setPanOffset(pre => ({
-        x: pre.x + deltaX,
-        y: pre.y + deltaY
-      }))
-      return;
-    }
-  }
-
-  // on mouse up
-  const handleMouseUp = () => {
-    if (["none"].includes(action)) return;
-
-    if (selectionElement) {
-      const index = elements.length - 1;
-      const { id, type, x1, y1, x2, y2 } = elements[index];
-
-      if (["line", "rectangle", "ellipse"].includes(type)) {
-        if (action === "drawing") {
-          const { x1, y1, x2, y2 } = adjustCoordinates(elements[id]);
-
-          updateElement(id, type, x1, y1, x2, y2);
-        } else if (action === "resizing") {
-          const { x1, y1, x2, y2 } = adjustCoordinates(elements[id]);
-
-          updateElement(id, type, x1, y1, x2, y2);
-        }
-        if (x1 === x2 && y1 === y2) {
-          undo();
-        }
-      } else if (type === "text") {
-        if (action === "writing") return;
-      }
-    }
-
-    setAction("none ");
-    setSelectionElement(null);
-  }
-
-  // when text area is out of focus
-  const handleBlur = () => {
-    const { id, type, x1, y1 } = selectionElement;
-    const options = {
-      text: textAreaRef.current.value
-    }
-    const ctx = canvasRef.current.getContext('2d')
-    ctx.font = `20px consolas`;
-    ctx.textBaseline = "top";
-    const x2 = x1 + ctx.measureText(options.text).width;
-    const y2 = y1 + 16;
-    updateElement(id, type, x1, y1, x2, y2, options);
-
-    setAction("none");
-    setSelectionElement(null);
-
-    if (selectionElement.text === options.text) {
-      undo();
-    }
-  }
-
   const handleZoom = (delta) => {
     setScale(pre => Math.min(Math.max(pre + delta, 0.1), 10))
+    
+    const canvasRef = staticCanvasRef.current;
+    const scaleOffsetX = (canvasRef.width / 2) * (scale - 1);
+    const scaleOffsetY = (canvasRef.height / 2) * (scale - 1);
+    setScaleOffset({ x: scaleOffsetX, y: scaleOffsetY });
+
   }
   return (
     <>
-      <div className="fixed">
-        <input type="radio" name="selection" id="selection"
-          checked={tool === "selection"}
-          onChange={() => setTool("selection")}
-        />
-        <label htmlFor="selection">Select</label>
+      <ToolBar
+        tool={tool}
+        setTool={setTool}
+      />
 
-        <input type="radio" name="hand" id="hand"
-          checked={tool === "hand"}
-          onChange={() => setTool("hand")}
-        />
-        <label htmlFor="hand">Hand</label>
+      <BottomBar
+        handleZoom={handleZoom}
+        undo={undo}
+        redo={redo}
+        scale={scale}
+      />
 
-        <input type="radio" name="freedraw" id="freedraw"
-          checked={tool === "freedraw"}
-          onChange={() => setTool("freedraw")}
-        />
-        <label htmlFor="freedraw">Pencil</label>
-
-        <input type="radio" name="line" id="line"
-          checked={tool === "line"}
-          onChange={() => setTool("line")}
-        />
-        <label htmlFor="line">Line</label>
-
-        <input type="radio" name="rectangle" id="rectangle"
-          checked={tool === "rectangle"}
-          onChange={() => setTool("rectangle")}
-        />
-        <label htmlFor="rectangle">Rectangle</label>
-
-        <input type="radio" name="text" id="text"
-          checked={tool === "text"}
-          onChange={() => setTool("text")}
-        />
-        <label htmlFor="text">Text</label>
-
-        <input type="radio" name="ellipse" id="ellipse"
-          checked={tool === "ellipse"}
-          onChange={() => setTool("ellipse")}
-        />
-        <label htmlFor="ellipse">ellipse</label>
-
-      </div>
-      <div className="fixed bottom-4 left-4">
-        <button className="bg-blue-200 p-2 m-1 rounded-lg"
-          onClick={() => handleZoom(-0.1)}>-</button>
-        <button className="bg-blue-200 p-2 m-1 rounded-lg"
-          // onClick={() => setScale(1)}> {new Intl.NumberFormat("en-GB", { style: "percent" }).format(scale)}
-          onClick={() => setScale(1)}> {(scale * 100).toFixed(0) + "%"}
-        </button>
-        <button className="bg-blue-200 p-2 m-1 rounded-lg"
-          onClick={() => handleZoom(0.1)}>+</button>
-
-        <button className="bg-blue-200 p-2 m-1 rounded-lg"
-          onClick={undo}>Undo</button>
-
-        <button className="bg-blue-200 p-2 m-1 rounded-lg"
-          onClick={redo}>Redo</button>
-      </div>
       {action == "writing" &&
-        <textarea
-          ref={textAreaRef}
-          onBlur={handleBlur}
-          className="fixed bg-transparent outline-0 resize-none
-          wrap-break-word overflow-hidden whitespace-pre"
-          style={{
-            font: `${20 * scale}px consolas`,
-            left: selectionElement.x1 * scale + panOffset.x * scale - scaleOffset.x,
-            top: (selectionElement.y1 - 5.5) * scale + panOffset.y * scale - scaleOffset.y
-          }}
-        >        </textarea>
-      }
-      <canvas ref={canvasRef}
-        className="bg-white"
-        width={canvasSize.width}
-        height={canvasSize.height}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}>
-        Canvas here</canvas>
+        < TextField
+          staticCanvasRef={staticCanvasRef}
+          updateElement={updateElement}
+          textAreaRef={textAreaRef}
+          selectionElement={selectionElement}
+          scale={scale}
+          scaleOffset={scaleOffset}
+          panOffset={panOffset}
+          setAction={setAction}
+          setSelectionElement={setSelectionElement}
+        />}
+
+      <InteractiveCanvas
+        interactiveCanvasRef={interactiveCanvasRef}
+        canvasSize={canvasSize}
+        createElement={createElement}
+        updateElement={updateElement}
+        scale={scale}
+        scaleOffset={scaleOffset}
+        panOffset={panOffset}
+        startPanPosition={startPanPosition}
+        tool={tool}
+        pressedKeys={pressedKeys}
+        elements={elements}
+        selectionElement={selectionElement}
+        setElements={setElements}
+        action={action}
+        setAction={setAction}
+        setSelectionElement={setSelectionElement}
+        setPanOffset={setPanOffset}
+        setStartPanPosition={setStartPanPosition}
+      />
+
+      <StaticCanvas
+        staticCanvasRef={staticCanvasRef}
+        scaleOffset={scaleOffset}
+        setScaleOffset={setScaleOffset}
+        canvasSize={canvasSize}
+        elements={elements}
+        selectionElement={selectionElement}
+        action={action}
+        scale={scale}
+        panOffset={panOffset}
+      />
     </>
   )
 }

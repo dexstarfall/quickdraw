@@ -1,7 +1,7 @@
 // do not touch - from perfect freehand
 
 const average = (a, b) => (a + b) / 2
-const getSvgPathFromStroke = (points, closed = true) => {
+export const getSvgPathFromStroke = (points, closed = true) => {
   const len = points.length
 
   if (len < 4) { return `` }
@@ -24,10 +24,3 @@ const getSvgPathFromStroke = (points, closed = true) => {
 
   return result
 }
-// distance b/w 2 points
-const distance = (a, b) => {
-  return Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2))
-}
-
-export { getSvgPathFromStroke }
-export { distance, average }
