@@ -2,8 +2,8 @@ import React, { useRef, useEffect, useState } from 'react';
 import rough from 'roughjs';
 import { getStroke } from 'perfect-freehand'
 import { pointsOnBezierCurves } from 'points-on-curve';
-import { getSvgPathFromStroke } from '../../../packages/utils/global'
-import { distance } from '../../../packages/utils/global'
+import { getSvgPathFromStroke } from '@utils/global'
+import { distance } from '@utils/global'
 
 // Logic for
 // Creation of Rough/freehand element 
