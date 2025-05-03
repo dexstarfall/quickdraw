@@ -32,7 +32,7 @@ function BottomBar(
           onClick={() => handleZoom(-0.1)}>-</button>
         <button className="bg-blue-200 p-2 m-1 rounded-lg"
           // onClick={() => setScale(1)}> {new Intl.NumberFormat("en-GB", { style: "percent" }).format(scale)}
-          onClick={() => setScale(1)}> {(scale * 100).toFixed(0) + "%"}
+          onClick={() => handleZoom(0,true)}> {(scale * 100).toFixed(0) + "%"}
         </button>
         <button className="bg-blue-200 p-2 m-1 rounded-lg"
           onClick={() => handleZoom(0.1)}>+</button>

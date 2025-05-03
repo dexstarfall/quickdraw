@@ -206,12 +206,17 @@ function Canvas() {
     }
     setElements((pre => pre.map((elm, i) => i === id ? updatedElement : elm)), true);
   }
-  const handleZoom = (delta) => {
-    setScale(pre => Math.min(Math.max(pre + delta, 0.1), 10))
-    
+  const handleZoom = (delta, reset = false) => {
+    if (reset) {
+      setScale(1)
+      setScaleOffset({ x: 0, y: 0 });
+      return;
+    }
+    const currScale = Math.min(Math.max(scale + delta, 0.1), 10);
+    setScale(currScale)
     const canvasRef = staticCanvasRef.current;
-    const scaleOffsetX = (canvasRef.width / 2) * (scale - 1);
-    const scaleOffsetY = (canvasRef.height / 2) * (scale - 1);
+    const scaleOffsetX = (canvasRef.width / 2) * (currScale - 1);
+    const scaleOffsetY = (canvasRef.height / 2) * (currScale - 1);
     setScaleOffset({ x: scaleOffsetX, y: scaleOffsetY });
 
   }
