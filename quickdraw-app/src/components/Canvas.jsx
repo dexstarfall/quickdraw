@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import rough from 'roughjs';
 // store
-import { useCanvasStore, useHistoryStore } from '@Store/canvas';
+import { useCanvasStore, useHistoryStore } from '@stores/canvas';
 
 // helpers from packages
 import { getFreeDrawDimension } from '@utils/global'

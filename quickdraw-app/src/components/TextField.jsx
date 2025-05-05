@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react'
 // store
-import { useCanvasStore, useHistoryStore } from '@Store/canvas';
+import { useCanvasStore, useHistoryStore } from '@stores/canvas';
 
 function TextField(
   { staticCanvasRef, updateElement, }) {

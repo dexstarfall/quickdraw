@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from 'react'
 import rough from 'roughjs';
 // store
-import { useCanvasStore, useHistoryStore } from '@Store/canvas';
+import { useCanvasStore, useHistoryStore } from '@stores/canvas';
 
 // functions
 import { getStroke } from 'perfect-freehand'

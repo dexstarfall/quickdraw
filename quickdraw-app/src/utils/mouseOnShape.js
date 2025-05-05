@@ -1,4 +1,4 @@
-import { distance, nearPoint } from '@math/index'
+import { distance, nearPoint } from './math'
 
 export const onCorner = (mx, my, x1, y1, x2, y2) => {
   const topLeft = nearPoint(mx, my, x1, y1, "tl");

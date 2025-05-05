@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react'
 // store
-import { useCanvasStore, useHistoryStore } from '@Store/canvas';
+import { useCanvasStore, useHistoryStore } from '@stores/canvas';
 // functionality
-import { nearPoint } from '@math/index'
+import { nearPoint } from '@utils/math'
 import { onCorner, onRectangle, onLine, onEllipse } from '@utils/mouseOnShape'
 
 // Logic for
