@@ -10,6 +10,9 @@ export default defineConfig({
     alias: {
       "@utils": path.resolve(__dirname, "../packages/utils/"),
       "@math": path.resolve(__dirname, "../packages/math/"),
+      "@element": path.resolve(__dirname, "../packages/element/"),
+      
+      "@Store": path.resolve(__dirname, "./src/components/Store/"),
     }
   },
 })

@@ -1,5 +1,4 @@
 // do not touch - from perfect freehand
-
 const average = (a, b) => (a + b) / 2
 export const getSvgPathFromStroke = (points, closed = true) => {
   const len = points.length
@@ -23,4 +22,19 @@ export const getSvgPathFromStroke = (points, closed = true) => {
   if (closed) { result += 'Z' }
 
   return result
+}
+
+
+// for now get width height of perfect freehand tool
+export const getFreeDrawDimension = (points) => {
+  let minX = Infinity, minY = Infinity, maxX = 0, maxY = 0;
+  for (const point of points) {
+    if (point.x < minX) minX = point.x;
+    if (point.y < minY) minY = point.y;
+    if (point.x > maxX) maxX = point.x;
+    if (point.y > maxY) maxY = point.y;
+  }
+  const width = maxX - minX;
+  const height = maxY - minY;
+  return { width, height }
 }

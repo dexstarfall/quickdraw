@@ -1,14 +1,31 @@
-import React from 'react'
+import React, { useEffect } from 'react'
+import { useCanvasStore } from '@Store/canvasStore';
 
 function TextField(
   { staticCanvasRef,
     updateElement,
-    textAreaRef, selectionElement, scale,
-    scaleOffset, panOffset,
-    setAction, setSelectionElement
+    undo,
   }
 ) {
+  const textAreaRef = useRef();
+
+  const { action, selectionElement, scale, scaleOffset, panOffset,
+    setAction, setSelectionElement, } = useCanvasStore();
+
   if (!selectionElement) return null;
+
+
+  // textarea focus when load in text
+  useEffect(() => {
+    const textArea = textAreaRef.current;
+    if (action === "writing" && selectionElement) {
+      requestAnimationFrame(() => {
+        textArea.focus()
+        textArea.value = selectionElement.text || "";
+      });
+    }
+
+  }, [action, selectionElement])
 
   // when text area is out of focus
   const handleBlur = () => {

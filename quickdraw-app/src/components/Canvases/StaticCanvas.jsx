@@ -1,6 +1,9 @@
 import React, { useRef, useEffect } from 'react'
 import rough from 'roughjs';
+// store
+import { useCanvasStore } from '@Store/canvasStore';
 
+// functions
 import { getStroke } from 'perfect-freehand'
 import { pointsOnBezierCurves } from 'points-on-curve';
 import { getSvgPathFromStroke } from '@utils/global'
@@ -39,11 +42,12 @@ const drawElement = (rc, ctx, element) => {
 }
 
 function StaticCanvas(
-  { staticCanvasRef,
-    canvasSize, scale, panOffset, scaleOffset,
-    action, elements, selectionElement,
+  { staticCanvasRef, canvasSize,
+    elements,
   }
 ) {
+  const { action, selectionElement, scale, panOffset, scaleOffset } = useCanvasStore();
+
   useEffect(() => {
     // ctx -> canvasContext, rc -> roughCanvas
     const canvas = staticCanvasRef.current;

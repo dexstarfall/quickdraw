@@ -1,4 +1,7 @@
 import React, { useEffect } from 'react'
+// store
+import { useCanvasStore } from '@Store/canvasStore';
+// functionality
 import { nearPoint } from '@math/index'
 import { onCorner, onRectangle, onLine, onEllipse } from '@utils/mouseOnShape'
 
@@ -94,11 +97,15 @@ const cursorForPosition = (position) => {
 function InteractiveCanvas(
   { interactiveCanvasRef, canvasSize,
     createElement, updateElement,
-    scale, scaleOffset, panOffset, startPanPosition,
-    tool, action, pressedKeys, elements, selectionElement,
-    setAction, setStartPanPosition, setElements, setSelectionElement, setPanOffset
+    pressedKeys, elements,
+    setElements,
   }
 ) {
+  const {
+    tool, action, scale, scaleOffset, panOffset, startPanPosition, selectionElement,
+    setPanOffset, setAction, setStartPanPosition, setSelectionElement
+  } = useCanvasStore();
+
   // return element at position
   const getElementAtPosition = (x, y) => {
     return elements
@@ -207,6 +214,19 @@ function InteractiveCanvas(
       } else {
         event.target.style.cursor = "default";
       }
+    } else if (tool == "hand") {
+      event.target.style.cursor = "grab";
+    } else if (tool == "text") {
+      const element = getElementAtPosition(mouseX, mouseY);
+      if (element) {
+        event.target.style.cursor = "text";
+      } else {
+        event.target.style.cursor = "crosshair";
+      }
+    } else if (["freedraw", "line", "rectangle", "ellipse"].includes(tool)) {
+      event.target.style.cursor = "crosshair";
+    } else {
+      event.target.style.cursor = "default";
     }
 
     if (action === "drawing") {

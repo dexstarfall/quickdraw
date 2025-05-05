@@ -1,6 +1,10 @@
 import React, { useRef, useEffect, useState } from 'react';
 import rough from 'roughjs';
-
+// store
+import { useCanvasStore } from '@Store/canvasStore';
+// helpers from packages
+import { getFreeDrawDimension } from '@utils/global'
+// components
 import StaticCanvas from './Canvases/StaticCanvas';
 import InteractiveCanvas from './canvases/interactiveCanvas';
 import ToolBar from './ToolBar';
@@ -10,6 +14,8 @@ import TextField from './TextField';
 // Logic for
 // Creation of Rough/freehand element 
 let generator = rough.generator();
+let cc = generator.line(0, 0, 0, 0);
+console.log(cc)
 const createElement = (id, type, x1, y1, x2, y2) => {
   const roughProperties = {
     strokeWidth: 3,
@@ -52,7 +58,6 @@ const createElement = (id, type, x1, y1, x2, y2) => {
     throw new Error(`Type not found: ${type}`)
   }
 }
-
 // undo and redo feature and all elements linked
 const useHistory = (initialState) => {
   const [index, setIndex] = useState(0);
@@ -98,27 +103,14 @@ const usePressedKeys = () => {
       window.removeEventListener("keyup", handleKeyUp);
     };
   }, []);
-
   return pressedKeys;
 };
-// for now get width height of perfect freehand tool
-const getDimension = (points) => {
-  let minX = Infinity, minY = Infinity, maxX = 0, maxY = 0;
-  for (const point of points) {
-    if (point.x < minX) minX = point.x;
-    if (point.y < minY) minY = point.y;
-    if (point.x > maxX) maxX = point.x;
-    if (point.y > maxY) maxY = point.y;
-  }
-  const width = maxX - minX;
-  const height = maxY - minY;
-  return { width, height }
-}
 
 function Canvas() {
+  const { action, scale, setScale, setPanOffset, setScaleOffset } = useCanvasStore();
+
   const staticCanvasRef = useRef(null);
   const interactiveCanvasRef = useRef(null);
-  const textAreaRef = useRef();
   const pressedKeys = usePressedKeys();
 
   //current Canvas size
@@ -126,20 +118,10 @@ function Canvas() {
     width: window.innerWidth,
     height: window.innerHeight,
   });
-  //  all elements drawn in canvas 
+  //  all elements in canvas 
   const [elements, setElements, undo, redo] = useHistory([]);
-  // action -> none, drawing, moving,
-  const [action, setAction] = useState("none");
-  // slection, line, rectangle, ellipse
-  const [tool, setTool] = useState("freedraw");
-  //panoffset
-  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
-  // currently selected element while moving (for now)
-  const [startPanPosition, setStartPanPosition] = useState({ x: 0, y: 0 })
-  const [selectionElement, setSelectionElement] = useState(null);
-  //  scale functionality
-  const [scale, setScale] = useState(1);
-  const [scaleOffset, setScaleOffset] = useState({ x: 0, y: 0 });
+
+  // const [selectionElement, setSelectionElement] = useState(null);
 
   //on window resize update canvas
   useEffect(() => {
@@ -175,19 +157,7 @@ function Canvas() {
     return () => {
       window.removeEventListener("wheel", mouseWheelHandler);
     };
-  }, [pressedKeys]);
-
-  // textarea focus when load in text
-  useEffect(() => {
-    const textArea = textAreaRef.current;
-    if (action === "writing" && selectionElement) {
-      requestAnimationFrame(() => {
-        textArea.focus()
-        textArea.value = selectionElement.text || "";
-      });
-    }
-
-  }, [action, selectionElement])
+  }, []);
 
   // update Shape
   const updateElement = (id, type, x1, y1, x2, y2, options) => {
@@ -197,7 +167,7 @@ function Canvas() {
     } else if (type == "freedraw") {
       updatedElement = elements[id];
       const { points } = updatedElement;
-      const { width, height } = getDimension(points);
+      const { width, height } = getFreeDrawDimension(points);
       updatedElement = { ...updatedElement, width, height }
       updatedElement.points = [...points, { x: x2, y: y2 }];
     } else if (type == "text") {
@@ -222,29 +192,19 @@ function Canvas() {
   }
   return (
     <>
-      <ToolBar
-        tool={tool}
-        setTool={setTool}
-      />
+      <ToolBar />
 
       <BottomBar
         handleZoom={handleZoom}
         undo={undo}
         redo={redo}
-        scale={scale}
       />
 
       {action == "writing" &&
         < TextField
           staticCanvasRef={staticCanvasRef}
           updateElement={updateElement}
-          textAreaRef={textAreaRef}
-          selectionElement={selectionElement}
-          scale={scale}
-          scaleOffset={scaleOffset}
-          panOffset={panOffset}
-          setAction={setAction}
-          setSelectionElement={setSelectionElement}
+          undo={undo}
         />}
 
       <InteractiveCanvas
@@ -252,32 +212,16 @@ function Canvas() {
         canvasSize={canvasSize}
         createElement={createElement}
         updateElement={updateElement}
-        scale={scale}
-        scaleOffset={scaleOffset}
-        panOffset={panOffset}
-        startPanPosition={startPanPosition}
-        tool={tool}
         pressedKeys={pressedKeys}
+
         elements={elements}
-        selectionElement={selectionElement}
         setElements={setElements}
-        action={action}
-        setAction={setAction}
-        setSelectionElement={setSelectionElement}
-        setPanOffset={setPanOffset}
-        setStartPanPosition={setStartPanPosition}
       />
 
       <StaticCanvas
         staticCanvasRef={staticCanvasRef}
-        scaleOffset={scaleOffset}
-        setScaleOffset={setScaleOffset}
         canvasSize={canvasSize}
         elements={elements}
-        selectionElement={selectionElement}
-        action={action}
-        scale={scale}
-        panOffset={panOffset}
       />
     </>
   )
