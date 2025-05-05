@@ -1,7 +1,8 @@
 import React, { useRef, useEffect, useState } from 'react';
 import rough from 'roughjs';
 // store
-import { useCanvasStore } from '@Store/canvasStore';
+import { useCanvasStore, useHistoryStore } from '@Store/canvas';
+
 // helpers from packages
 import { getFreeDrawDimension } from '@utils/global'
 // components
@@ -14,8 +15,7 @@ import TextField from './TextField';
 // Logic for
 // Creation of Rough/freehand element 
 let generator = rough.generator();
-let cc = generator.line(0, 0, 0, 0);
-console.log(cc)
+
 const createElement = (id, type, x1, y1, x2, y2) => {
   const roughProperties = {
     strokeWidth: 3,
@@ -58,27 +58,31 @@ const createElement = (id, type, x1, y1, x2, y2) => {
     throw new Error(`Type not found: ${type}`)
   }
 }
+
+// for now successfully intregated to store
+
 // undo and redo feature and all elements linked
-const useHistory = (initialState) => {
-  const [index, setIndex] = useState(0);
-  const [history, setHistory] = useState([initialState]); // [[], [{}], [{},{}]]
+// const useHistory = (initialState) => {
+//   const [index, setIndex] = useState(0);
+//   const [history, setHistory] = useState([initialState]); // [[], [{}], [{},{}]]
 
-  const setState = (action, overwrite = false) => {
-    // in this case always function is passed but fallback if element is passed
-    const newState = typeof action === "function" ? action(history[index]) : action;
+//   const setState = (action, overwrite = false) => {
+//     // in this case always function is passed but fallback if element is passed
+//     const newState = typeof action === "function" ? action(history[index]) : action;
 
-    if (overwrite) {
-      setHistory(pre => pre.map((elm, i) => i === index ? newState : elm));
-    } else {
-      // const undatedState = [...history].slice(0, index -1 );
-      setHistory(pre => [...pre.slice(0, index + 1), newState]);
-      setIndex(pre => pre + 1);
-    }
-  }
-  const undo = () => index > 0 && setIndex(pre => pre - 1);
-  const redo = () => index < history.length - 1 && setIndex(pre => pre + 1);
-  return [history[index], setState, undo, redo];
-}
+//     if (overwrite) {
+//       setHistory(pre => pre.map((elm, i) => i === index ? newState : elm));
+//     } else {
+//       // const undatedState = [...history].slice(0, index -1 );
+//       setHistory(pre => [...pre.slice(0, index + 1), newState]);
+//       setIndex(pre => pre + 1);
+//     }
+//   }
+//   const undo = () => index > 0 && setIndex(pre => pre - 1);
+//   const redo = () => index < history.length - 1 && setIndex(pre => pre + 1);
+//   return [history[index], setState, undo, redo];
+// }
+
 // keep track of keypress
 const usePressedKeys = () => {
   const [pressedKeys, setPressedKeys] = useState(new Set());
@@ -109,6 +113,11 @@ const usePressedKeys = () => {
 function Canvas() {
   const { action, scale, setScale, setPanOffset, setScaleOffset } = useCanvasStore();
 
+  const elements = useHistoryStore((s) => s.getCurrentState());
+  const setElements = useHistoryStore((s) => s.setState);
+  const undo = useHistoryStore((s) => s.undo);
+  const redo = useHistoryStore((s) => s.redo);
+
   const staticCanvasRef = useRef(null);
   const interactiveCanvasRef = useRef(null);
   const pressedKeys = usePressedKeys();
@@ -119,7 +128,7 @@ function Canvas() {
     height: window.innerHeight,
   });
   //  all elements in canvas 
-  const [elements, setElements, undo, redo] = useHistory([]);
+  // const [elements, setElements, undo, redo] = useHistory([]);
 
   // const [selectionElement, setSelectionElement] = useState(null);
 
@@ -196,15 +205,12 @@ function Canvas() {
 
       <BottomBar
         handleZoom={handleZoom}
-        undo={undo}
-        redo={redo}
       />
 
       {action == "writing" &&
         < TextField
           staticCanvasRef={staticCanvasRef}
           updateElement={updateElement}
-          undo={undo}
         />}
 
       <InteractiveCanvas
@@ -213,15 +219,11 @@ function Canvas() {
         createElement={createElement}
         updateElement={updateElement}
         pressedKeys={pressedKeys}
-
-        elements={elements}
-        setElements={setElements}
       />
 
       <StaticCanvas
         staticCanvasRef={staticCanvasRef}
         canvasSize={canvasSize}
-        elements={elements}
       />
     </>
   )

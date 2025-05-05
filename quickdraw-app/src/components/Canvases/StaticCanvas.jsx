@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from 'react'
 import rough from 'roughjs';
 // store
-import { useCanvasStore } from '@Store/canvasStore';
+import { useCanvasStore, useHistoryStore } from '@Store/canvas';
 
 // functions
 import { getStroke } from 'perfect-freehand'
@@ -42,11 +42,10 @@ const drawElement = (rc, ctx, element) => {
 }
 
 function StaticCanvas(
-  { staticCanvasRef, canvasSize,
-    elements,
-  }
+  { staticCanvasRef, canvasSize }
 ) {
   const { action, selectionElement, scale, panOffset, scaleOffset } = useCanvasStore();
+  const elements = useHistoryStore((s) => s.getCurrentState());
 
   useEffect(() => {
     // ctx -> canvasContext, rc -> roughCanvas

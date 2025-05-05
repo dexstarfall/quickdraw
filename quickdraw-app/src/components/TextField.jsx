@@ -1,13 +1,12 @@
-import React, { useEffect } from 'react'
-import { useCanvasStore } from '@Store/canvasStore';
+import React, { useEffect, useRef } from 'react'
+// store
+import { useCanvasStore, useHistoryStore } from '@Store/canvas';
 
 function TextField(
-  { staticCanvasRef,
-    updateElement,
-    undo,
-  }
-) {
+  { staticCanvasRef, updateElement, }) {
+
   const textAreaRef = useRef();
+  const undo = useHistoryStore((s) => s.undo);
 
   const { action, selectionElement, scale, scaleOffset, panOffset,
     setAction, setSelectionElement, } = useCanvasStore();

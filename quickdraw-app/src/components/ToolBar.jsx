@@ -1,5 +1,5 @@
 import React from 'react'
-import { useCanvasStore } from '@Store/canvasStore';
+import { useCanvasStore } from '@Store/canvas';
 
 function ToolBar() {
   const { tool, setTool } = useCanvasStore();

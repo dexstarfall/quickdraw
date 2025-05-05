@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
 // store
-import { useCanvasStore } from '@Store/canvasStore';
+import { useCanvasStore, useHistoryStore } from '@Store/canvas';
 // functionality
 import { nearPoint } from '@math/index'
 import { onCorner, onRectangle, onLine, onEllipse } from '@utils/mouseOnShape'
@@ -97,14 +97,17 @@ const cursorForPosition = (position) => {
 function InteractiveCanvas(
   { interactiveCanvasRef, canvasSize,
     createElement, updateElement,
-    pressedKeys, elements,
-    setElements,
+    pressedKeys,
   }
 ) {
   const {
     tool, action, scale, scaleOffset, panOffset, startPanPosition, selectionElement,
     setPanOffset, setAction, setStartPanPosition, setSelectionElement
   } = useCanvasStore();
+
+  const elements = useHistoryStore((s) => s.getCurrentState());
+  const setElements = useHistoryStore((s) => s.setState);
+  const undo = useHistoryStore((s) => s.undo);
 
   // return element at position
   const getElementAtPosition = (x, y) => {

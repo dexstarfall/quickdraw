@@ -1,12 +1,12 @@
 import React, { useEffect } from 'react'
-import { useCanvasStore } from '@Store/canvasStore';
+// store
+import { useCanvasStore, useHistoryStore } from '@Store/canvas';
 
-function BottomBar(
-  { handleZoom,
-    undo, redo,
-  }
-) {
+
+function BottomBar({ handleZoom }) {
   const { scale } = useCanvasStore();
+  const undo = useHistoryStore((s) => s.undo);
+  const redo = useHistoryStore((s) => s.redo);
   // undo redo functionality
   useEffect(() => {
     const undoRedoFunction = event => {
