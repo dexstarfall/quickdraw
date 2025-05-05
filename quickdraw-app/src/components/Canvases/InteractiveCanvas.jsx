@@ -4,6 +4,7 @@ import { useCanvasStore, useHistoryStore } from '@stores/canvas';
 // functionality
 import { nearPoint } from '@utils/math'
 import { onCorner, onRectangle, onLine, onEllipse } from '@utils/mouseOnShape'
+import { createElement, updateElement } from '@actions/elementRelated';
 
 // Logic for
 // positionOnElement - onShape, start, end, tl, tr, bl, br
@@ -96,7 +97,6 @@ const cursorForPosition = (position) => {
 }
 function InteractiveCanvas(
   { interactiveCanvasRef, canvasSize,
-    createElement, updateElement,
     pressedKeys,
   }
 ) {
@@ -108,6 +108,24 @@ function InteractiveCanvas(
   const elements = useHistoryStore((s) => s.getCurrentState());
   const setElements = useHistoryStore((s) => s.setState);
   const undo = useHistoryStore((s) => s.undo);
+
+  // pan functionality
+  useEffect(() => {
+    const wheelHandler = event => {
+      //  shift key is pressed
+      if (event.shiftKey) {
+        // Prevent default scrolling behavior
+        event.preventDefault();
+        setPanOffset(pre => ({ x: pre.x - event.deltaY, y: pre.y }))
+      } else {
+        setPanOffset(pre => ({ x: pre.x, y: pre.y - event.deltaY }))
+      }
+    };
+    window.addEventListener("wheel", wheelHandler, { passive: false });
+    return () => {
+      window.removeEventListener("wheel", wheelHandler);
+    };
+  }, []);
 
   // return element at position
   const getElementAtPosition = (x, y) => {
@@ -233,10 +251,14 @@ function InteractiveCanvas(
     }
 
     if (action === "drawing") {
+
       const id = elements.length - 1;
       const { type, x1, y1 } = elements[id];
 
-      updateElement(id, type, x1, y1, mouseX, mouseY);
+      const content = { id, type, x1, y1, x2: mouseX, y2: mouseY };
+      const updatedElement = updateElement(elements[id], content);
+      setElements((pre => pre.map((elm, i) => i === id ? updatedElement : elm)), true);
+
     } else if (action === "moving") {
 
       const { id, type } = selectionElement;
@@ -264,18 +286,25 @@ function InteractiveCanvas(
       moveElement(elements[id], newPoints);
 
     } else if (action === "resizing") {
+
       const { id, type, position, ...coordiantes } = selectionElement;
       const { x1, y1, x2, y2 } = resizeCoordinates(mouseX, mouseY, position, coordiantes);
-      updateElement(id, type, x1, y1, x2, y2);
+      const content = { id, type, x1, y1, x2, y2 };
+      const updatedElement = updateElement(elements[id], content);
+      setElements((pre => pre.map((elm, i) => i === id ? updatedElement : elm)), true);
+
     } else if (action === "panning") {
+
       const deltaX = mouseX - startPanPosition.x;
       const deltaY = mouseY - startPanPosition.y;
       setPanOffset(pre => ({
         x: pre.x + deltaX,
         y: pre.y + deltaY
+
       }))
       return;
     }
+    // console.log(elements)
   }
   // on mouse up
   const handleMouseUp = () => {
@@ -287,13 +316,19 @@ function InteractiveCanvas(
 
       if (["line", "rectangle", "ellipse"].includes(type)) {
         if (action === "drawing") {
-          const { x1, y1, x2, y2 } = adjustCoordinates(elements[id]);
 
-          updateElement(id, type, x1, y1, x2, y2);
+          const { x1, y1, x2, y2 } = adjustCoordinates(elements[id]);
+          const content = { id, type, x1, y1, x2, y2 };
+          const updatedElement = updateElement(elements[id], content);
+          setElements((pre => pre.map((elm, i) => i === id ? updatedElement : elm)), true);
+
         } else if (action === "resizing") {
-          const { x1, y1, x2, y2 } = adjustCoordinates(elements[id]);
 
-          updateElement(id, type, x1, y1, x2, y2);
+          const { x1, y1, x2, y2 } = adjustCoordinates(elements[id]);
+          const content = { id, type, x1, y1, x2, y2 };
+          const updatedElement = updateElement(elements[id], content);
+          setElements((pre => pre.map((elm, i) => i === id ? updatedElement : elm)), true);
+
         }
         if (x1 === x2 && y1 === y2) {
           undo();

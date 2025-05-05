@@ -10,6 +10,7 @@ export default defineConfig({
     alias: {
       "@utils": path.resolve(__dirname, "./src/utils/"),
       "@stores": path.resolve(__dirname, "./src/stores"),
+      "@actions": path.resolve(__dirname, "./src/actions"),
     }
   },
 })

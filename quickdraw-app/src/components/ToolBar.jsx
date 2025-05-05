@@ -1,10 +1,24 @@
 import React from 'react'
+// stores
 import { useCanvasStore } from '@stores/canvas';
+import Tool from './Tool';
 
 function ToolBar() {
   const { tool, setTool } = useCanvasStore();
   return (
     <>
+      {/* <div className="bg-gray-200 p-2 
+                    fixed z-[10] top-20 left-[50%] translate-x-[-50%]
+                    flex gap-2 rounded-xl">
+
+        <Tool name={"S"} />
+        <Tool name={"H"} />
+        <Tool name={"P"} />
+        <Tool name={"L"} />
+        <Tool name={"R"} />
+        <Tool name={"T"} />
+        <Tool name={"E"} />
+      </div> */}
 
       <div className="fixed z-[3]">
         <input type="radio" name="selection" id="selection"

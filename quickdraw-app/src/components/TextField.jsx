@@ -1,12 +1,14 @@
 import React, { useEffect, useRef } from 'react'
 // store
 import { useCanvasStore, useHistoryStore } from '@stores/canvas';
+import { updateElement } from '@actions/elementRelated';
 
-function TextField(
-  { staticCanvasRef, updateElement, }) {
+function TextField({ staticCanvasRef }) {
 
   const textAreaRef = useRef();
   const undo = useHistoryStore((s) => s.undo);
+  const elements = useHistoryStore((s) => s.getCurrentState());
+  const setElements = useHistoryStore((s) => s.setState);
 
   const { action, selectionElement, scale, scaleOffset, panOffset,
     setAction, setSelectionElement, } = useCanvasStore();
@@ -38,7 +40,10 @@ function TextField(
     const x2 = x1 + ctx.measureText(options.text).width;
     const y2 = y1 + parseInt(ctx.font, 10);
 
-    updateElement(id, type, x1, y1, x2, y2, options);
+    const content = { id, type, x1, y1, x2, y2 };
+    const updatedElement = updateElement(elements[id], content, options);
+
+    setElements((pre => pre.map((elm, i) => i === id ? updatedElement : elm)), true);
 
     setAction("none");
     setSelectionElement(null);
