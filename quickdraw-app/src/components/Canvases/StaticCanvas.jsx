@@ -2,44 +2,8 @@ import React, { useRef, useEffect } from 'react'
 import rough from 'roughjs';
 // store
 import { useCanvasStore, useHistoryStore } from '@stores/canvas';
+import { drawElement } from '@actions/elementRelated';
 
-// functions
-import { getStroke } from 'perfect-freehand'
-import { pointsOnBezierCurves } from 'points-on-curve';
-import { getSvgPathFromStroke } from '@utils/global'
-
-
-const drawElement = (rc, ctx, element) => {
-  const { type, points } = element;
-
-  // feature line curve in future
-  if (type === "future-line") {
-    const { x1, x2, y1, y2 } = element;
-    const curve = [[x1, y1], [x1 + 500, y1], [x2, y2], [x2, y2]];
-    const p1 = pointsOnBezierCurves(curve);
-    rc.curve(p1, { roughness: 0 });
-    return;
-  }
-
-  if (type === "line" || type === "rectangle" || type === "ellipse") {
-
-    rc.draw(element.roughElement);
-
-  } else if (type === "freedraw") {
-
-    const stroke = getSvgPathFromStroke(getStroke(points))
-    ctx.fill(new Path2D(stroke))
-
-  } else if (type === "text") {
-
-    const { x1, y1, text } = element;
-    // ctx.textBaseline = "top";
-    ctx.fillText(text, x1, y1);
-
-    // ctx.fillRect(x1, y1, xNew, 24);
-
-  }
-}
 
 function StaticCanvas(
   { staticCanvasRef, canvasSize }
@@ -78,7 +42,7 @@ function StaticCanvas(
     <>
       <canvas
         ref={staticCanvasRef}
-        className="fixed z-[1]"
+        className="fixed z-[1] bg-[#121212]"
         width={canvasSize.width}
         height={canvasSize.height}
       >Static Canvas here</canvas></>

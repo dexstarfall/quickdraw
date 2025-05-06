@@ -61,7 +61,7 @@ function TextField({ staticCanvasRef }) {
       <textarea
         ref={textAreaRef}
         onBlur={handleBlur}
-        className="fixed z-[3] bg-transparent outline-0 resize-none
+        className="fixed z-[3] bg-transparent outline-0 resize-none text-white
      break-words overflow-hidden whitespace-pre"
         style={{ font: `${fontSize}px consolas`, left, top }}
       > </textarea>

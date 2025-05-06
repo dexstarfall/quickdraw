@@ -1,13 +1,8 @@
 import React, { useRef, useEffect, useState } from 'react';
-// stores
-import { useCanvasStore } from '@stores/canvas';
 
 // components
 import StaticCanvas from './canvases/StaticCanvas';
 import InteractiveCanvas from './canvases/interactiveCanvas';
-import ToolBar from './ToolBar';
-import BottomBar from './BottomBar';
-import TextField from './TextField';
 
 // keep track of keypress
 const usePressedKeys = () => {
@@ -36,11 +31,8 @@ const usePressedKeys = () => {
   return pressedKeys;
 };
 
-function Canvas() {
-  const { action } = useCanvasStore();
+function Canvas({ staticCanvasRef, interactiveCanvasRef }) {
 
-  const staticCanvasRef = useRef(null);
-  const interactiveCanvasRef = useRef(null);
   const pressedKeys = usePressedKeys();
 
   //current Canvas size
@@ -66,17 +58,6 @@ function Canvas() {
 
   return (
     <>
-      <ToolBar />
-
-      <BottomBar
-        staticCanvasRef={staticCanvasRef}
-      />
-
-      {action == "writing" &&
-        < TextField
-          staticCanvasRef={staticCanvasRef}
-        />}
-
       <InteractiveCanvas
         interactiveCanvasRef={interactiveCanvasRef}
         canvasSize={canvasSize}

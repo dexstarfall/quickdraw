@@ -96,9 +96,7 @@ const cursorForPosition = (position) => {
   }
 }
 function InteractiveCanvas(
-  { interactiveCanvasRef, canvasSize,
-    pressedKeys,
-  }
+  { interactiveCanvasRef, canvasSize, pressedKeys }
 ) {
   const {
     tool, action, scale, scaleOffset, panOffset, startPanPosition, selectionElement,
@@ -108,24 +106,6 @@ function InteractiveCanvas(
   const elements = useHistoryStore((s) => s.getCurrentState());
   const setElements = useHistoryStore((s) => s.setState);
   const undo = useHistoryStore((s) => s.undo);
-
-  // pan functionality
-  useEffect(() => {
-    const wheelHandler = event => {
-      //  shift key is pressed
-      if (event.shiftKey) {
-        // Prevent default scrolling behavior
-        event.preventDefault();
-        setPanOffset(pre => ({ x: pre.x - event.deltaY, y: pre.y }))
-      } else {
-        setPanOffset(pre => ({ x: pre.x, y: pre.y - event.deltaY }))
-      }
-    };
-    window.addEventListener("wheel", wheelHandler, { passive: false });
-    return () => {
-      window.removeEventListener("wheel", wheelHandler);
-    };
-  }, []);
 
   // return element at position
   const getElementAtPosition = (x, y) => {

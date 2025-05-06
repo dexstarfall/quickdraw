@@ -1,13 +1,19 @@
 import rough from 'roughjs';
 import { getFreeDrawDimension } from '@utils/global';
 
+// functions
+import { getStroke } from 'perfect-freehand'
+import { pointsOnBezierCurves } from 'points-on-curve';
+import { getSvgPathFromStroke } from '@utils/global'
+
 
 let generator = rough.generator();
 
 export const createElement = (id, type, x1, y1, x2, y2) => {
+  let strokeColor = "#efefef";
   const roughProperties = {
     strokeWidth: 3,
-    stroke: 'lightcoral',
+    stroke: strokeColor,
     roughness: 0,
     bowing: 3,
     // disableMultiStroke: true
@@ -34,12 +40,11 @@ export const createElement = (id, type, x1, y1, x2, y2) => {
     return { id, type, x1, y1, x2, y2, width, height, roughElement };
 
   } else if (type === "freedraw") {
-
-    return { id, type, points: [{ x: x1, y: y1 }] };
+    return { id, type, points: [{ x: x1, y: y1 }], strokeColor };
 
   } else if (type === "text") {
 
-    return { id, type, x1, y1, x2, y2, width, height, text: "" };
+    return { id, type, x1, y1, x2, y2, width, height, text: "", strokeColor };
 
   }
   else {
@@ -52,7 +57,7 @@ export const updateElement = (element, content, options = {}) => {
   const { id, type, x1, y1, x2, y2, } = content
   let updatedElement;
   if (["line", "rectangle", "ellipse"].includes(type)) {
-  updatedElement = createElement(id, type, x1, y1, x2, y2);
+    updatedElement = createElement(id, type, x1, y1, x2, y2);
 
   } else if (type == "freedraw") {
     updatedElement = element;
@@ -65,4 +70,54 @@ export const updateElement = (element, content, options = {}) => {
     updatedElement.text = options.text;
   }
   return updatedElement;
+}
+
+export const drawElement = (rc, ctx, element) => {
+  ctx.fillStyle = element.strokeColor
+  // ctx.fillStyle = "white"
+
+  const { type, points } = element;
+
+  // feature line curve in future
+  if (type === "future-line") {
+    const { x1, x2, y1, y2 } = element;
+    const curve = [[x1, y1], [x1 + 500, y1], [x2, y2], [x2, y2]];
+    const p1 = pointsOnBezierCurves(curve);
+    rc.curve(p1, { roughness: 0 });
+    return;
+  }
+
+  if (type === "line" || type === "rectangle" || type === "ellipse") {
+
+    rc.draw(element.roughElement);
+
+  } else if (type === "freedraw") {
+    const options = getStroke(points, {
+      size: 8,
+      smoothing: 0.5,
+      thinning: 0.5,
+      streamline: 0.5,
+      easing: (t) => t,
+      start: {
+        taper: 0,
+        cap: true,
+      },
+      end: {
+        taper: 0,
+        cap: true,
+      },
+    })
+    const stroke = getSvgPathFromStroke(options)
+
+    ctx.fill(new Path2D(stroke))
+
+  } else if (type === "text") {
+
+    const { x1, y1, text } = element;
+    // ctx.textBaseline = "top";
+    ctx.fillText(text, x1, y1);
+
+    // ctx.fillRect(x1, y1, xNew, 24);
+
+  }
 }
