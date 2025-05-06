@@ -36,19 +36,25 @@ const canvasStore = (set) => ({
         ? updater(state.startPanPosition)
         : updater,
   })),
-
+  elements: [],
+  setElements: (updater) => set((state) => ({
+    elements:
+      typeof updater === "function"
+        ? updater(state.elements)
+        : updater,
+  })),
 })
 
 const historyStore = (set, get) => ({
   index: 0,
   history: [[]], // initialState = []
 
-  setState: (action, overwrite = false) => {
+  setHistory: (action, overwrite = false) => {
     const { history, index } = get();
     const newState = typeof action === 'function' ? action(history[index]) : action;
 
     if (overwrite) {
-      const newHistory = history.map((elm, i) => i === index ? newState : elm);
+      const newHistory = history.map((h, i) => i === index ? newState : h);
       set({ history: newHistory });
     } else {
       const newHistory = [...history.slice(0, index + 1), newState];
@@ -60,6 +66,7 @@ const historyStore = (set, get) => ({
     const { index } = get();
     if (index > 0) {
       set({ index: index - 1 });
+      useCanvasStore.getState().setElements(get().getCurrentState());
     }
   },
 
@@ -67,14 +74,27 @@ const historyStore = (set, get) => ({
     const { index, history } = get();
     if (index < history.length - 1) {
       set({ index: index + 1 });
+      useCanvasStore.getState().setElements(get().getCurrentState());
     }
   },
+
+  deleteAllElements: () => {
+    const { history, index } = get();
+    const emptyState = [];
+    // Pushing new empty state as a new entry in history
+    const newHistory = [...history.slice(0, index + 1), emptyState];
+    const newIndex = index + 1;
+    set({ history: newHistory, index: newIndex });
+    useCanvasStore.getState().setElements(emptyState);
+  },
+  
 
   // Getter for current state for history
   getCurrentState: () => {
     const { history, index } = get();
     return history[index];
   },
+
 })
 
 const useCanvasStore = create(
@@ -86,7 +106,9 @@ const useCanvasStore = create(
         partialize: (state) => ({
           tool: state.tool,
           scale: state.scale,
+          elements: state.elements,
         }),
+        getStorage: () => localStorage,
       }
     ),
     { name: "quickdrawCanvas" }

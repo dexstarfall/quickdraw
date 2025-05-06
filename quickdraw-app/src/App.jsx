@@ -1,4 +1,4 @@
-import React, { useRef } from 'react'
+import React, { useEffect, useRef } from 'react'
 import Canvas from './components/Canvas'
 import './App.css'
 import UiLayer from './components/UiLayer'
@@ -11,6 +11,7 @@ function App() {
   const staticCanvasRef = useRef(null);
   const interactiveCanvasRef = useRef(null);
   const { action } = useCanvasStore();
+
   return (
     <>
       <UiLayer

@@ -3,6 +3,7 @@ import React, { useEffect } from 'react';
 import { useCanvasStore, useHistoryStore } from '@stores/canvas';
 import BtnControl from './buttons/BtnControl';
 import BtnControl2 from './buttons/BtnControl2';
+
 // icons
 import {
   undoIcon,
@@ -11,8 +12,7 @@ import {
 
 function ControlBar(prop) {
   const { scale, setScaleOffset, setScale, setPanOffset, panOffset } = useCanvasStore();
-  const undo = useHistoryStore((s) => s.undo);
-  const redo = useHistoryStore((s) => s.redo);
+  const { undo, redo } = useHistoryStore();
 
   // undo redo functionality
   useEffect(() => {
@@ -69,9 +69,21 @@ function ControlBar(prop) {
     setScaleOffset({ x: scaleOffsetX, y: scaleOffsetY });
   }
 
+  const deleteAllElements = () => {
+    useHistoryStore.getState().deleteAllElements()
+  }
+
   return (
     <>
       <div className="z-[3] absolute right-0 top-0 flex gap-4">
+
+        <button onClick={deleteAllElements}
+          className="bg-neutral-800 text-white w-fit px-2 pointer-events-auto
+                    flex items-center
+                    rounded-xl shadow-lg overflow-hidden">
+
+          <p>Clear All</p>
+        </button>
 
         <div className="bg-neutral-800 text-white w-fit 
                     flex rounded-xl shadow-lg overflow-hidden">

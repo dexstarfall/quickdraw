@@ -11,6 +11,15 @@ function StaticCanvas(
   const { action, selectionElement, scale, panOffset, scaleOffset } = useCanvasStore();
   const elements = useHistoryStore((s) => s.getCurrentState());
 
+  // overwrite history with initial elements
+  useEffect(() => {
+    const { elements } = useCanvasStore.getState();
+      const { setHistory } = useHistoryStore.getState();
+    if (elements && elements.length > 0) {
+      setHistory(elements, true); 
+    }
+  }, []);
+
   useEffect(() => {
     // ctx -> canvasContext, rc -> roughCanvas
     const canvas = staticCanvasRef.current;

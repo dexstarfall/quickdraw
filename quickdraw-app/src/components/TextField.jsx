@@ -8,7 +8,7 @@ function TextField({ staticCanvasRef }) {
   const textAreaRef = useRef();
   const undo = useHistoryStore((s) => s.undo);
   const elements = useHistoryStore((s) => s.getCurrentState());
-  const setElements = useHistoryStore((s) => s.setState);
+  const setElements = useHistoryStore((s) => s.setHistory);
 
   const { action, selectionElement, scale, scaleOffset, panOffset,
     setAction, setSelectionElement, } = useCanvasStore();

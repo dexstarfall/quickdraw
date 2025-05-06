@@ -104,8 +104,9 @@ function InteractiveCanvas(
   } = useCanvasStore();
 
   const elements = useHistoryStore((s) => s.getCurrentState());
-  const setElements = useHistoryStore((s) => s.setState);
-  const undo = useHistoryStore((s) => s.undo);
+  const setElements = useHistoryStore((s) => s.setHistory);
+  // const undo = useHistoryStore((s) => s.undo);
+  const { getCurrentState,undo } = useHistoryStore();
 
   // return element at position
   const getElementAtPosition = (x, y) => {
@@ -286,8 +287,14 @@ function InteractiveCanvas(
     }
     // console.log(elements)
   }
+
   // on mouse up
   const handleMouseUp = () => {
+
+    // persist all elements
+    useCanvasStore.getState().setElements(getCurrentState());
+
+
     if (["none"].includes(action)) return;
 
     if (selectionElement) {
