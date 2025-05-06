@@ -9,7 +9,8 @@ import { getSvgPathFromStroke } from '@utils/global'
 
 let generator = rough.generator();
 
-export const createElement = (id, type, x1, y1, x2, y2) => {
+export const createElement = (id, type, x1, y1, x2, y2, options = {}) => {
+
   let strokeColor = "#efefef";
   const roughProperties = {
     strokeWidth: 3,
@@ -40,11 +41,12 @@ export const createElement = (id, type, x1, y1, x2, y2) => {
     return { id, type, x1, y1, x2, y2, width, height, roughElement };
 
   } else if (type === "freedraw") {
-    return { id, type, points: [{ x: x1, y: y1 }], strokeColor };
+    const { pressure } = options
+    return { id, type, points: [{ x: x1, y: y1, pressure: pressure }], strokeColor };
 
   } else if (type === "text") {
 
-    return { id, type, x1, y1, x2, y2, width, height, text: "", strokeColor };
+    return { id, type, x1, y1, x2, y2, width, height, text: "", font: "", strokeColor };
 
   }
   else {
@@ -64,10 +66,11 @@ export const updateElement = (element, content, options = {}) => {
     const { points } = updatedElement;
     const { width, height } = getFreeDrawDimension(points);
     updatedElement = { ...updatedElement, width, height }
-    updatedElement.points = [...points, { x: x2, y: y2 }];
+    updatedElement.points = [...points, { x: x2, y: y2, pressure: content.pressure }];
   } else if (type == "text") {
     updatedElement = createElement(id, type, x1, y1, x2, y2);
     updatedElement.text = options.text;
+    updatedElement.font = options.font;
   }
   return updatedElement;
 }
@@ -93,6 +96,7 @@ export const drawElement = (rc, ctx, element) => {
 
   } else if (type === "freedraw") {
     const options = getStroke(points, {
+      simulatePressure: true,
       size: 8,
       smoothing: 0.5,
       thinning: 0.5,
@@ -114,7 +118,8 @@ export const drawElement = (rc, ctx, element) => {
   } else if (type === "text") {
 
     const { x1, y1, text } = element;
-    // ctx.textBaseline = "top";
+    ctx.textBaseline = "top";
+    ctx.font = element.font;
     ctx.fillText(text, x1, y1);
 
     // ctx.fillRect(x1, y1, xNew, 24);

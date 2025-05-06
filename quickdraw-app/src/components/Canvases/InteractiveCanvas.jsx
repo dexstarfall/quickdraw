@@ -133,9 +133,8 @@ function InteractiveCanvas(
     setElements((pre => pre.map((elm, i) => i === id ? movedElement : elm)), true);
   }
   // mouse down
-  const handleMouseDown = (event) => {
+  const handlePointerDown = (event) => {
     const { x: mouseX, y: mouseY } = getMouseCoordinates(event);
-
     if (event.button === 1 || pressedKeys.has(" ")) {
       setStartPanPosition({ x: mouseX, y: mouseY });
       setAction("panning")
@@ -190,7 +189,7 @@ function InteractiveCanvas(
     } else if (["freedraw", "line", "rectangle", "ellipse"].includes(tool)) { // when tool not selection
       // shape element creation here - line, rect, ellipse
       const id = elements.length;
-      const newElement = createElement(id, tool, mouseX, mouseY, mouseX, mouseY);
+      const newElement = createElement(id, tool, mouseX, mouseY, mouseX, mouseY, { pressure: event.pressure });
       setElements(pre => [...pre, newElement]);
       setSelectionElement(newElement);
       setAction("drawing");
@@ -206,7 +205,8 @@ function InteractiveCanvas(
     }
   }
   // on mouse move
-  const handleMouseMove = (event) => {
+  const handlePointerMove = (event) => {
+    // console.log(event.pressure)
     const { x: mouseX, y: mouseY } = getMouseCoordinates(event);
 
     // tools-> UX
@@ -238,7 +238,7 @@ function InteractiveCanvas(
       const id = elements.length - 1;
       const { type, x1, y1 } = elements[id];
 
-      const content = { id, type, x1, y1, x2: mouseX, y2: mouseY };
+      const content = { id, type, x1, y1, x2: mouseX, y2: mouseY, pressure: event.pressure };
       const updatedElement = updateElement(elements[id], content);
       setElements((pre => pre.map((elm, i) => i === id ? updatedElement : elm)), true);
 
@@ -297,7 +297,7 @@ function InteractiveCanvas(
   }
 
   // on mouse up
-  const handleMouseUp = () => {
+  const handlePointerUp = () => {
     if (["none"].includes(action)) return;
 
     if (selectionElement) {
@@ -334,6 +334,7 @@ function InteractiveCanvas(
     setSelectionElement(null);
 
   }
+
   return (
     <>
       <canvas
@@ -341,9 +342,9 @@ function InteractiveCanvas(
         className="fixed z-[2]"
         width={canvasSize.width}
         height={canvasSize.height}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
       >Static Canvas here</canvas></>
   )
 }

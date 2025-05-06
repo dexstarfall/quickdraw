@@ -32,17 +32,16 @@ function TextField({ staticCanvasRef }) {
   const handleBlur = () => {
     const { id, type, x1, y1 } = selectionElement;
     const options = {
-      text: textAreaRef.current.value
+      text: textAreaRef.current.value,
+      font: `20px consolas`
     }
     const ctx = staticCanvasRef.current.getContext('2d')
     ctx.font = `20px consolas`;
     ctx.textBaseline = "top";
     const x2 = x1 + ctx.measureText(options.text).width;
     const y2 = y1 + parseInt(ctx.font, 10);
-
     const content = { id, type, x1, y1, x2, y2 };
     const updatedElement = updateElement(elements[id], content, options);
-
     setElements((pre => pre.map((elm, i) => i === id ? updatedElement : elm)), true);
 
     setAction("none");
@@ -51,6 +50,8 @@ function TextField({ staticCanvasRef }) {
     if (selectionElement.text === options.text) {
       undo();
     }
+    // persist text elements
+    useCanvasStore.getState().setElements(useHistoryStore.getState().getCurrentState()); // Corrected
   }
 
   const fontSize = 20 * scale;
