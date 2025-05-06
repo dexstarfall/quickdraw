@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 // store
 import { useCanvasStore, useHistoryStore } from '@stores/canvas';
 // functionality
@@ -106,7 +106,7 @@ function InteractiveCanvas(
   const elements = useHistoryStore((s) => s.getCurrentState());
   const setElements = useHistoryStore((s) => s.setHistory);
   // const undo = useHistoryStore((s) => s.undo);
-  const { getCurrentState,undo } = useHistoryStore();
+  const { getCurrentState, undo } = useHistoryStore();
 
   // return element at position
   const getElementAtPosition = (x, y) => {
@@ -198,6 +198,8 @@ function InteractiveCanvas(
     } else if (tool === "hand") {
       setStartPanPosition({ x: mouseX, y: mouseY });
       setAction("panning")
+    } else if (tool === "eraser") {
+      setAction("erasing")
     }
     else {
       return
@@ -225,7 +227,7 @@ function InteractiveCanvas(
       } else {
         event.target.style.cursor = "crosshair";
       }
-    } else if (["freedraw", "line", "rectangle", "ellipse"].includes(tool)) {
+    } else if (["freedraw", "line", "rectangle", "ellipse", "eraser"].includes(tool)) {
       event.target.style.cursor = "crosshair";
     } else {
       event.target.style.cursor = "default";
@@ -284,17 +286,18 @@ function InteractiveCanvas(
 
       }))
       return;
+    } else if (action === "erasing") {
+      const element = getElementAtPosition(mouseX, mouseY);
+      if (element) {
+        // setElements((pre => pre.filter((_, i) => i != element.id)));
+        setElements((pre => pre.filter(elm => elm.id !== element.id)));
+      }
     }
     // console.log(elements)
   }
 
   // on mouse up
   const handleMouseUp = () => {
-
-    // persist all elements
-    useCanvasStore.getState().setElements(getCurrentState());
-
-
     if (["none"].includes(action)) return;
 
     if (selectionElement) {
@@ -324,9 +327,12 @@ function InteractiveCanvas(
         if (action === "writing") return;
       }
     }
+    // persist all elements
+    useCanvasStore.getState().setElements(getCurrentState());
 
     setAction("none");
     setSelectionElement(null);
+
   }
   return (
     <>

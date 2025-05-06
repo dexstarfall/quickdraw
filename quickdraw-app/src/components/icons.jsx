@@ -10,6 +10,11 @@ export const rectangleIcon = (
   <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e3e3e3"><path d="M216-144q-29.7 0-50.85-21.15Q144-186.3 144-216v-528q0-29.7 21.15-50.85Q186.3-816 216-816h528q29.7 0 50.85 21.15Q816-773.7 816-744v528q0 29.7-21.15 50.85Q773.7-144 744-144H216Zm0-72h528v-528H216v528Z" /></svg>
 )
 
+export const eraserIcon = (
+  <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e3e3e3"><path d="M672-264h192v72H600l72-72Zm-437 72L117-310q-21-21-21.5-50.5T117-412l431-431q22-22 51-22t51.27 22.27L843-650q21 21 21.5 50.5T843-548L487-192H235Zm222-72 335-335-193-193-431 431 97 97h192Zm23-216Z" /></svg>
+
+)
+
 export const textIcon = (
   <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e3e3e3"><path d="M432-192v-480H240v-96h480v96H528v480h-96Z" /></svg>
 )
@@ -33,9 +38,9 @@ export const redoIcon = (
 );
 
 export const zoomOutIcon = (
-<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e3e3e3"><path d="M444-444H240v-72h204v-204h72v204h204v72H516v204h-72v-204Z"/></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e3e3e3"><path d="M444-444H240v-72h204v-204h72v204h204v72H516v204h-72v-204Z" /></svg>
 );
 
 export const zoomInIcon = (
-<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e3e3e3"><path d="M232-444v-72h496v72H232Z"/></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#e3e3e3"><path d="M232-444v-72h496v72H232Z" /></svg>
 );

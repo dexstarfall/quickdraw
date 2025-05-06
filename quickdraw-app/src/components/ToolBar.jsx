@@ -8,7 +8,8 @@ import {
   lineIcon,
   ellipseIcon,
   rectangleIcon,
-  textIcon
+  textIcon,
+  eraserIcon
 
 } from './icons'
 
@@ -25,6 +26,7 @@ function ToolBar() {
       <ButtonTool name={"rectangle"} icon={rectangleIcon} />
       <ButtonTool name={"ellipse"} icon={ellipseIcon} />
       <ButtonTool name={"text"} icon={textIcon} />
+      <ButtonTool name={"eraser"} icon={eraserIcon} />
     </div>
   )
 }

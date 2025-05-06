@@ -69,7 +69,7 @@ function ControlBar(prop) {
     setScaleOffset({ x: scaleOffsetX, y: scaleOffsetY });
   }
 
-  const deleteAllElements = () => {
+  const handleDelete = () => {
     useHistoryStore.getState().deleteAllElements()
   }
 
@@ -77,12 +77,12 @@ function ControlBar(prop) {
     <>
       <div className="z-[3] absolute right-0 top-0 flex gap-4">
 
-        <button onClick={deleteAllElements}
+        <button onClick={handleDelete}
           className="bg-neutral-800 text-white w-fit px-2 pointer-events-auto
                     flex items-center
                     rounded-xl shadow-lg overflow-hidden">
 
-          <p>Clear All</p>
+          <p>Erase All</p>
         </button>
 
         <div className="bg-neutral-800 text-white w-fit 
