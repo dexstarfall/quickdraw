@@ -27,6 +27,13 @@ function ToolBar() {
       <ButtonTool name={"ellipse"} icon={ellipseIcon} />
       <ButtonTool name={"text"} icon={textIcon} />
       <ButtonTool name={"eraser"} icon={eraserIcon} />
+      <button
+        className="bg-neutral-800 text-white w-fit px-2 pointer-events-auto
+                    flex items-center
+                    rounded-xl shadow-lg overflow-hidden">
+
+        <p>Generate</p>
+      </button>
     </div>
   )
 }

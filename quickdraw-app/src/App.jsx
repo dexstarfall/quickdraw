@@ -11,7 +11,6 @@ function App() {
   const staticCanvasRef = useRef(null);
   const interactiveCanvasRef = useRef(null);
   const { action, elements, tool } = useCanvasStore();
-  console.log(elements.length)
   return (
     <>
       <UiLayer
@@ -26,7 +25,7 @@ function App() {
         <TextField staticCanvasRef={staticCanvasRef} />
       )}
       {elements.length == 0 && tool == "selection" &&
-        <div className='  text-neutral-400 
+        <div className='  text-neutral-400 pointer-events-none
         z-[10] absolute top-[50%] left-[50%]  translate-x-[-50%] translate-y-[-50%]
         text-center '>
           <p className='custom-font-1 text-6xl text-[#f74856] text-shadow-md text-shadow-[#ca3535de] my-[2rem]'>  QuickDraw</p>
