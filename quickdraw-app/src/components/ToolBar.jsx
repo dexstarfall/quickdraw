@@ -9,7 +9,8 @@ import {
   ellipseIcon,
   rectangleIcon,
   textIcon,
-  eraserIcon
+  eraserIcon,
+  imageIcon
 
 } from './icons'
 
@@ -27,13 +28,16 @@ function ToolBar() {
       <ButtonTool name={"ellipse"} icon={ellipseIcon} />
       <ButtonTool name={"text"} icon={textIcon} />
       <ButtonTool name={"eraser"} icon={eraserIcon} />
-      <button
+      <ButtonTool name={"image"} icon={imageIcon} />
+
+      {/* future feature reserve */}
+      {/* <button
         className="bg-neutral-800 text-white w-fit px-2 pointer-events-auto
                     flex items-center
                     rounded-xl shadow-lg overflow-hidden">
 
         <p>Generate</p>
-      </button>
+      </button> */}
     </div>
   )
 }

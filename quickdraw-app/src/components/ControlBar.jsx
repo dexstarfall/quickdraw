@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 // store
 import { useCanvasStore, useHistoryStore } from '@stores/canvas';
 import BtnControl from './buttons/BtnControl';
@@ -6,13 +6,15 @@ import BtnControl2 from './buttons/BtnControl2';
 
 // icons
 import {
-  undoIcon,
-  redoIcon, zoomInIcon, zoomOutIcon
+  undoIcon, redoIcon,
+  zoomInIcon, zoomOutIcon,
+  deleteAllIcon
 } from "./icons"
 
 function ControlBar(prop) {
   const { scale, setScaleOffset, setScale, setPanOffset, panOffset } = useCanvasStore();
   const { undo, redo } = useHistoryStore();
+  const [confirmDelete, setConfirmDelete] = useState(false)
 
   // undo redo functionality
   useEffect(() => {
@@ -69,20 +71,21 @@ function ControlBar(prop) {
     setScaleOffset({ x: scaleOffsetX, y: scaleOffsetY });
   }
 
-  const handleDelete = () => {
+  const deleteAllElements = () => {
     useHistoryStore.getState().deleteAllElements()
+    setConfirmDelete(false)
   }
 
   return (
     <>
       <div className="z-[3] absolute right-0 top-0 flex gap-4">
 
-        <button onClick={handleDelete}
+        <button onClick={() => setConfirmDelete(true)}
           className="bg-neutral-800 text-white w-fit px-2 pointer-events-auto
                     flex items-center
                     rounded-xl shadow-lg overflow-hidden">
 
-          <p>Erase All</p>
+          {deleteAllIcon}
         </button>
 
         <div className="bg-neutral-800 text-white w-fit 
@@ -111,6 +114,22 @@ function ControlBar(prop) {
         </div>
 
       </div>
+      {confirmDelete &&
+        <div className='bg-[#1e1e1e] text-[#efefef] text-xl
+                      p-4 rounded-xl pointer-events-auto
+                      absolute top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%]'  >
+          <p className='mb-4 '>Do you want to remove all elemets?</p>
+          <div className='flex gap-2 justify-evenly'>
+            <button onClick={deleteAllElements}
+              className='bg-[#2e2e2e] px-4 py-2 rounded-xl'>
+              Yes
+            </button>
+            <button onClick={() => setConfirmDelete(false)}
+              className='bg-[#2e2e2e] px-4 py-2 rounded-xl'>
+              No
+            </button>
+          </div>
+        </div>}
     </>
   )
 }

@@ -82,7 +82,7 @@ export const drawElement = (rc, ctx, element) => {
   const { type, points } = element;
 
   // feature line curve in future
-  if (type === "future-line") {
+  if (type === "lineCurved") {
     const { x1, x2, y1, y2 } = element;
     const curve = [[x1, y1], [x1 + 500, y1], [x2, y2], [x2, y2]];
     const p1 = pointsOnBezierCurves(curve);
