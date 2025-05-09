@@ -1,6 +1,10 @@
 import React from 'react'
 // store
-import { useCanvasStore, useHistoryStore } from '@stores/canvas';
+import {
+  useCanvasStore,
+  useHistoryStore,
+  usePropertiesStore
+} from '@stores/canvas';
 // functionality
 import { nearPoint } from '@utils/math'
 import { onCorner, onRectangle, onLine, onEllipse } from '@utils/mouseOnShape'
@@ -98,6 +102,8 @@ const cursorForPosition = (position) => {
 function InteractiveCanvas(
   { interactiveCanvasRef, canvasSize, pressedKeys }
 ) {
+  const { strokeColor } = usePropertiesStore();
+
   const {
     tool, action, scale, scaleOffset, panOffset, startPanPosition, selectionElement,
     setPanOffset, setAction, setStartPanPosition, setSelectionElement
@@ -181,7 +187,8 @@ function InteractiveCanvas(
       }
       // text elm creation here
       const id = elements.length;
-      const newElement = createElement(id, tool, mouseX, mouseY, mouseX, mouseY);
+      const options = { strokeColor }
+      const newElement = createElement(id, tool, mouseX, mouseY, mouseX, mouseY, options);
       setElements(pre => [...pre, newElement]);
       setSelectionElement(newElement);
       setAction("writing");
@@ -189,7 +196,8 @@ function InteractiveCanvas(
     } else if (["freedraw", "line", "rectangle", "ellipse"].includes(tool)) { // when tool not selection
       // shape element creation here - line, rect, ellipse
       const id = elements.length;
-      const newElement = createElement(id, tool, mouseX, mouseY, mouseX, mouseY, { pressure: event.pressure });
+      const options = { pressure: event.pressure, strokeColor }
+      const newElement = createElement(id, tool, mouseX, mouseY, mouseX, mouseY, options);
       setElements(pre => [...pre, newElement]);
       setSelectionElement(newElement);
       setAction("drawing");
@@ -238,8 +246,13 @@ function InteractiveCanvas(
       const id = elements.length - 1;
       const { type, x1, y1 } = elements[id];
 
-      const content = { id, type, x1, y1, x2: mouseX, y2: mouseY, pressure: event.pressure };
-      const updatedElement = updateElement(elements[id], content);
+      const options = {
+        id, type, x1, y1,
+        x2: mouseX,
+        y2: mouseY,
+        pressure: event.pressure,
+      };
+      const updatedElement = updateElement(elements[id], options);
       setElements((pre => pre.map((elm, i) => i === id ? updatedElement : elm)), true);
 
     } else if (action === "moving") {

@@ -1,11 +1,15 @@
 import React, { useEffect, useRef } from 'react'
 // store
-import { useCanvasStore, useHistoryStore } from '@stores/canvas';
+import {
+  usePropertiesStore,
+  useCanvasStore,
+  useHistoryStore
+} from '@stores/canvas';
 import { updateElement } from '@actions/elementRelated';
 
 function TextField({ staticCanvasRef }) {
 
-  const textAreaRef = useRef();
+
   const undo = useHistoryStore((s) => s.undo);
   const elements = useHistoryStore((s) => s.getCurrentState());
   const setElements = useHistoryStore((s) => s.setHistory);
@@ -13,6 +17,9 @@ function TextField({ staticCanvasRef }) {
   const { action, selectionElement, scale, scaleOffset, panOffset,
     setAction, setSelectionElement, } = useCanvasStore();
 
+  const { strokeColor } = usePropertiesStore();
+
+  const textAreaRef = useRef();
   if (!selectionElement) return null;
 
 
@@ -31,17 +38,18 @@ function TextField({ staticCanvasRef }) {
   // when text area is out of focus
   const handleBlur = () => {
     const { id, type, x1, y1 } = selectionElement;
-    const options = {
-      text: textAreaRef.current.value,
-      font: `20px consolas`
-    }
     const ctx = staticCanvasRef.current.getContext('2d')
-    ctx.font = `20px consolas`;
+
     ctx.textBaseline = "top";
-    const x2 = x1 + ctx.measureText(options.text).width;
+    const font = `20px consolas`;
+    ctx.font = font;
+
+    const text = textAreaRef.current.value;
+    const x2 = x1 + ctx.measureText(text).width;
     const y2 = y1 + parseInt(ctx.font, 10);
-    const content = { id, type, x1, y1, x2, y2 };
-    const updatedElement = updateElement(elements[id], content, options);
+
+    const options = { id, type, x1, y1, x2, y2, text, font }
+    const updatedElement = updateElement(elements[id], options);
     setElements((pre => pre.map((elm, i) => i === id ? updatedElement : elm)), true);
 
     setAction("none");
@@ -56,15 +64,16 @@ function TextField({ staticCanvasRef }) {
 
   const fontSize = 20 * scale;
   const left = (selectionElement.x1 + panOffset.x) * scale - scaleOffset.x;
-  const top = (selectionElement.y1 + panOffset.y - 5.5) * scale - scaleOffset.y;
+  const top = (selectionElement.y1 + panOffset.y - 3) * scale - scaleOffset.y;
+  console.log(strokeColor)
   return (
     <>
       <textarea
         ref={textAreaRef}
         onBlur={handleBlur}
-        className="fixed z-[3] bg-transparent outline-0 resize-none text-white
+        className="fixed z-[3] bg-transparent outline-0 resize-none 
      break-words overflow-hidden whitespace-pre"
-        style={{ font: `${fontSize}px consolas`, left, top }}
+        style={{ font: `${fontSize}px consolas`, left, top, color: strokeColor }}
       > </textarea>
 
     </>

@@ -11,7 +11,12 @@ let generator = rough.generator();
 
 export const createElement = (id, type, x1, y1, x2, y2, options = {}) => {
 
-  let strokeColor = "#efefef";
+  let { strokeColor } = options
+
+  if (strokeColor == "") {
+    strokeColor = "white";
+  }
+
   const roughProperties = {
     strokeWidth: 3,
     stroke: strokeColor,
@@ -23,52 +28,47 @@ export const createElement = (id, type, x1, y1, x2, y2, options = {}) => {
   const height = y2 - y1;
   const width = x2 - x1;
 
-  if (type === "line") {
+  if (type === "freedraw") {
+    const { pressure } = options
+    return { id, type, points: [{ x: x1, y: y1, pressure: pressure }], strokeColor };
+  } else if (type === "text") {
+    return { id, type, x1, y1, x2, y2, width, height, text: "", font: "", strokeColor };
+  }
 
-    roughElement = generator.line(x1, y1, x2, y2, roughProperties);
-    return { id, type, x1, y1, x2, y2, width, height, roughElement };
-
-  } else if (type === "rectangle") {
-
+  if (type === "rectangle") {
     roughElement = generator.rectangle(x1, y1, width, height, roughProperties);
-    return { id, type, x1, y1, x2, y2, width, height, roughElement };
-
   } else if (type === "ellipse") {
-
     const centerX = (x2 + x1) / 2;
     const centerY = (y2 + y1) / 2;
     roughElement = generator.ellipse(centerX, centerY, width, height, roughProperties);
-    return { id, type, x1, y1, x2, y2, width, height, roughElement };
-
-  } else if (type === "freedraw") {
-    const { pressure } = options
-    return { id, type, points: [{ x: x1, y: y1, pressure: pressure }], strokeColor };
-
-  } else if (type === "text") {
-
-    return { id, type, x1, y1, x2, y2, width, height, text: "", font: "", strokeColor };
-
-  }
-  else {
+  } else if (type === "line") {
+    roughElement = generator.line(x1, y1, x2, y2, roughProperties);
+  } else {
     throw new Error(`Type not found: ${type}`)
   }
+  return { id, type, x1, y1, x2, y2, width, height, strokeColor, roughElement };
+
 }
 
 // update Shape
-export const updateElement = (element, content, options = {}) => {
-  const { id, type, x1, y1, x2, y2, } = content
+export const updateElement = (element, options = {}) => {
+  const { id, type, x1, y1, x2, y2, } = options
+  const newOptions = {
+    strokeColor: element.strokeColor,
+  }
   let updatedElement;
   if (["line", "rectangle", "ellipse"].includes(type)) {
-    updatedElement = createElement(id, type, x1, y1, x2, y2);
+    updatedElement = createElement(id, type, x1, y1, x2, y2, newOptions);
 
   } else if (type == "freedraw") {
     updatedElement = element;
     const { points } = updatedElement;
     const { width, height } = getFreeDrawDimension(points);
     updatedElement = { ...updatedElement, width, height }
-    updatedElement.points = [...points, { x: x2, y: y2, pressure: content.pressure }];
+    updatedElement.points = [...points, { x: x2, y: y2, pressure: options.pressure }];
   } else if (type == "text") {
-    updatedElement = createElement(id, type, x1, y1, x2, y2);
+
+    updatedElement = createElement(id, type, x1, y1, x2, y2, newOptions);
     updatedElement.text = options.text;
     updatedElement.font = options.font;
   }
@@ -76,7 +76,10 @@ export const updateElement = (element, content, options = {}) => {
 }
 
 export const drawElement = (rc, ctx, element) => {
-  ctx.fillStyle = element.strokeColor
+
+  ctx.fillStyle = element.strokeColor;
+
+  // ctx.fillStyle = element.strokeColor
   // ctx.fillStyle = "white"
 
   const { type, points } = element;

@@ -28,7 +28,7 @@ function ToolBar() {
       <ButtonTool name={"ellipse"} icon={ellipseIcon} />
       <ButtonTool name={"text"} icon={textIcon} />
       <ButtonTool name={"eraser"} icon={eraserIcon} />
-      <ButtonTool name={"image"} icon={imageIcon} />
+      {/* <ButtonTool name={"image"} icon={imageIcon} /> */}
 
       {/* future feature reserve */}
       {/* <button

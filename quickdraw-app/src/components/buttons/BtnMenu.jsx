@@ -5,8 +5,11 @@ function BtnMenu(prop) {
     <button
       onClick={prop.handler}
 
-      className='w-[100%] bg-neutral-800 rounded-lg py-1 px-2 pointer-events-auto
-                      text-left flex items-center gap-2'>
+      className='w-[100%] rounded-lg py-2 px-2 pointer-events-auto
+                      flex items-center gap-2
+                      text-left text-neutral-400
+                       hover:bg-[#DB2B39]  hover:text-white
+                      '>
       {prop.icon} <p>{prop.text}</p>
     </button>
   )

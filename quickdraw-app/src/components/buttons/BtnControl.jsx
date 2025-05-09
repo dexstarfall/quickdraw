@@ -1,11 +1,10 @@
-// BtnControl.js
 import React from 'react';
 import './buttons.css'
 
 function BtnControl(prop) {
   return (
     <button
-      className={`${prop.name !== "zoomReset" ? `btn-hover1` : null}
+      className={`${prop.name !== "zoomReset" ? `hover:bg-[crimson]` : null}
                   w-[40px] h-[40px] btn-pointer pointer-events-auto
                   flex justify-center items-center
                   text-center `}

@@ -15,6 +15,7 @@ import {
   extraIcon
 } from './icons'
 import BtnMenu from './buttons/BtnMenu';
+import BtnColor from './buttons/BtnColor';
 
 function MenuBar(prop) {
   const setElements = useHistoryStore((s) => s.setHistory);
@@ -51,41 +52,65 @@ function MenuBar(prop) {
 
   return (
     <>
-      <div className="bg-[#1d1d1d] w-fit mx-auto overflow-hidden
-                      absolute left-0 top-0 rounded-xl
-                      flex gap-2  shadow-lg ">
+      <div className="bg-[#1d1d1d] w-fit mx-auto 
+                      absolute left-0 top-0 
+                      flex gap-2 overflow-hidden
+                      rounded-xl shadow-lg ">
         <button onClick={menuBarHandle}
-          className={`btn-hover1
-              w-[40px] h-[40px] btn-pointer pointer-events-auto
-              flex justify-center items-center
-              text-center`}>
+          className={`${isMenuOpen ? "bg-[crimson]" : null}
+                      w-[40px] h-[40px] btn-pointer pointer-events-auto
+                      flex justify-center items-center
+                      text-center
+                      `}>
           {menuBarIcon}
         </button>
       </div>
 
       <div className={` ${isMenuOpen ? '' : 'translate-x-[-220px]'} transition-transform duration-300
-                    bg-[#1d1d1d] w-[200px]  text-white p-2
+                        pointer-events-auto
+                        text-white w-[200px]  
                        absolute top-[50px] left-0 z-[10] 
                        flex flex-col gap-2
-                       rounded-xl
                        `} >
-        <BtnMenu
-          handler={loadCanvasFromFile}
-          icon={loadFileIcon}
-          text={"Load Canvas"} />
-        <BtnMenu
-          handler={saveCanvasToFile}
-          icon={saveFileIcon}
-          text={"Save Canvas"} />
 
-        <BtnMenu
-          handler={() => exportCanvasToImage(prop.canvasRef, "quickdrawCanvas.png")}
-          icon={downloadIcon}
-          text={"Export as image"} />
-        <BtnMenu
-          icon={extraIcon}
-          text={"Future Feature"} />
+        <div className='bg-[#1d1d1d] p-2
+                          rounded-xl'>
+          <BtnMenu
+            handler={loadCanvasFromFile}
+            icon={loadFileIcon}
+            text={"Load Canvas"} />
+          <BtnMenu
+            handler={saveCanvasToFile}
+            icon={saveFileIcon}
+            text={"Save Canvas"} />
+
+          <BtnMenu
+            handler={() => exportCanvasToImage(prop.canvasRef, "quickdrawCanvas.png")}
+            icon={downloadIcon}
+            text={"Export as image"} />
+          <BtnMenu
+            icon={extraIcon}
+            text={"Future Feature"} />
+        </div>
+        <div className='bg-[#1d1d1d] text-neutral-400
+                         p-2 
+                        rounded-xl'>
+          <p>Stroke Color: </p>
+          <div className='
+                        flex gap-2 justify-center
+                        rounded-xl'>
+            <BtnColor color={`white`} />
+            <BtnColor color={"grey"} />
+            <BtnColor color={"gold"} />
+            <BtnColor color={"mediumseagreen"} />
+            <BtnColor color={"royalblue"} />
+            <BtnColor color={"crimson"} />
+          </div>
+        </div>
+
+
       </div>
+
     </>
 
   )

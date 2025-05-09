@@ -83,19 +83,23 @@ function ControlBar(prop) {
         <button onClick={() => setConfirmDelete(true)}
           className="bg-neutral-800 text-white w-fit px-2 pointer-events-auto
                     flex items-center
-                    rounded-xl shadow-lg overflow-hidden">
+                    rounded-xl shadow-lg overflow-hidden
+                    hover:bg-[crimson]
+                    ">
 
           {deleteAllIcon}
         </button>
 
-        <div className="bg-neutral-800 text-white w-fit 
-                    flex rounded-xl shadow-lg overflow-hidden">
+        <div className="bg-neutral-800 text-white
+                        flex 
+                        rounded-lg shadow-lg overflow-hidden">
           <BtnControl2 action={undo} icon={undoIcon} />
           <BtnControl2 action={redo} icon={redoIcon} />
         </div>
 
         <div className="bg-neutral-800 text-white w-fit 
-                    flex gap-2 rounded-xl shadow-lg overflow-hidden">
+                          flex gap-2 
+                          rounded-lg shadow-lg overflow-hidden">
 
           <BtnControl
             name={"zoomIn"}
@@ -118,7 +122,7 @@ function ControlBar(prop) {
         <div className='bg-[#1e1e1e] text-[#efefef] text-xl
                       p-4 rounded-xl pointer-events-auto
                       absolute top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%]'  >
-          <p className='mb-4 '>Do you want to remove all elemets?</p>
+          <p className='mb-4 '>Remove all elements?</p>
           <div className='flex gap-2 justify-evenly'>
             <button onClick={deleteAllElements}
               className='bg-[#2e2e2e] px-4 py-2 rounded-xl'>

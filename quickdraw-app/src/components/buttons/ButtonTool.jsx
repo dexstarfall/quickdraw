@@ -15,7 +15,7 @@ function ButtonTool({ name, icon }) {
                       w-[40px] h-[40px] pointer-events-auto
                       flex justify-center items-center
                       text-center rounded-lg  text-neutral-200 
-                      ${isActive ? 'bg-[#DB2B39] shadow-md shadow-[#8d141e]' :
+                      ${isActive ? 'bg-[crimson] shadow-md shadow-[#8d141e]' :
                       'btn-hover1 '} `}      >
         {icon}
       </div>

@@ -1,13 +1,19 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 
+
+const propertiesStore = (set) => ({
+  strokeColor: "white",
+  setStrokeColor: (color) => set({ strokeColor: color })
+})
+
 const canvasStore = (set) => ({
   // selection, line, rectangle, ellipse
-  tool: "selection",
   // action -> none, drawing, moving,
+  // canvas scale
+  tool: "selection",
   action: "none",
   selectionElement: null,
-  // canvas scale
   scale: 1,
   scaleOffset: { x: 0, y: 0 },
   panOffset: { x: 0, y: 0 },
@@ -87,7 +93,7 @@ const historyStore = (set, get) => ({
     set({ history: newHistory, index: newIndex });
     useCanvasStore.getState().setElements(emptyState);
   },
-  
+
 
   // Getter for current state for history
   getCurrentState: () => {
@@ -114,6 +120,21 @@ const useCanvasStore = create(
     { name: "quickdrawCanvas" }
   )
 )
+const usePropertiesStore = create(
+  devtools(
+    persist(
+      propertiesStore,
+      {
+        name: "properties",
+        partialize: (state) => ({
+          strokeColor: state.strokeColor,
+        }),
+        getStorage: () => localStorage,
+      }
+    ),
+    { name: "quickdrawCanvas" }
+  )
+)
 
 const useHistoryStore = create(
   devtools(historyStore,
@@ -121,5 +142,5 @@ const useHistoryStore = create(
   )
 )
 
-export { useCanvasStore, useHistoryStore }
+export { usePropertiesStore, useCanvasStore, useHistoryStore }
 
