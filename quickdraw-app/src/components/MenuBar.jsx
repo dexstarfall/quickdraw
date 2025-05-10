@@ -14,7 +14,7 @@ import {
   extraIcon
 } from './icons'
 import BtnMenu from './buttons/BtnMenu';
-function MenuBar() {
+function MenuBar(prop) {
 
   const setElements = useHistoryStore((s) => s.setHistory);
   const { getCurrentState } = useHistoryStore();

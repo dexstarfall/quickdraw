@@ -7,3 +7,7 @@ export const distance = (a, b) => {
 export const nearPoint = (mx, my, x, y, name) => {
   return Math.abs(mx - x) < 5 && Math.abs(my - y) < 5 ? name : null;
 }
+
+export const getRandomSeed = () => {
+  return Math.floor(Math.random() * (2 ** 31)) + 1;
+}

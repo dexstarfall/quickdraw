@@ -1,6 +1,7 @@
 import React from 'react'
 import BtnColor from './buttons/BtnColor';
 import BtnWidth from './buttons/BtnWidth';
+import BtnRoughness from './buttons/BtnRoughness';
 
 function PropertiesBar() {
   return (
@@ -30,6 +31,17 @@ function PropertiesBar() {
           <BtnWidth text={"M"} width={2} />
           <BtnWidth text={"L"} width={3} />
           <BtnWidth text={"XL"} width={4} />
+        </div>
+      </div>
+      <div>
+        <p>Roughness: </p>
+        <div className='mt-2
+                        flex gap-2 
+                        rounded-xl'>
+          <BtnRoughness text={"Light"} roughness={1} />
+          <BtnRoughness text={"Medium"} roughness={2} />
+          <BtnRoughness text={"Heavy"} roughness={3} />
+
         </div>
       </div>
 

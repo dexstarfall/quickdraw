@@ -5,8 +5,10 @@ import { devtools, persist } from 'zustand/middleware';
 const propertiesStore = (set) => ({
     strokeColor: "white",
     strokeWidth: 1,
+    roughness: 2,
     setStrokeColor: (color) => set({ strokeColor: color }),
-    setStrokeWidth: (width) => set({ strokeWidth: width })
+    setStrokeWidth: (width) => set({ strokeWidth: width }),
+    setRoughness: (rough) => set({ roughness: rough })
 })
 
 const canvasStore = (set) => ({
@@ -132,6 +134,7 @@ const usePropertiesStore = create(
                 partialize: (state) => ({
                     strokeColor: state.strokeColor,
                     strokeWidth: state.strokeWidth,
+                    roughness: state.roughness,
                 }),
                 getStorage: () => localStorage,
             }

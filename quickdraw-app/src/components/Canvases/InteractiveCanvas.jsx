@@ -6,7 +6,7 @@ import {
   usePropertiesStore
 } from '@stores/canvas';
 // functionality
-import { nearPoint } from '@utils/math'
+import { nearPoint, getRandomSeed } from '@utils/math'
 import { onCorner, onRectangle, onLine, onEllipse } from '@utils/mouseOnShape'
 import { createElement, updateElement } from '@actions/elementRelated';
 
@@ -102,7 +102,7 @@ const cursorForPosition = (position) => {
 function InteractiveCanvas(
   { interactiveCanvasRef, canvasSize, pressedKeys }
 ) {
-  const { strokeColor, strokeWidth } = usePropertiesStore();
+  const { strokeColor, strokeWidth, roughness } = usePropertiesStore();
 
   const {
     tool, action, scale, scaleOffset, panOffset, startPanPosition, selectionElement,
@@ -140,7 +140,9 @@ function InteractiveCanvas(
       const { x1, y1, x2, y2 } = newPoints
       const options = {
         strokeColor: element.strokeColor,
-        strokeWidth: element.strokeWidth
+        strokeWidth: element.strokeWidth,
+        roughness: element.roughness,
+        seed: element.seed,
       }
       movedElement = createElement(id, type, x1, y1, x2, y2, options);
     }
@@ -205,8 +207,11 @@ function InteractiveCanvas(
     } else if (["freedraw", "line", "rectangle", "ellipse"].includes(tool)) { // when tool not selection
       // shape element creation here - line, rect, ellipse
       const id = elements.length;
-      const options = { pressure: event.pressure, strokeColor, strokeWidth }
+
+      const seed = getRandomSeed()
+      const options = { pressure: event.pressure, strokeColor, strokeWidth, roughness, seed }
       const newElement = createElement(id, tool, mouseX, mouseY, mouseX, mouseY, options);
+      console.log(newElement)
       setElements(pre => [...pre, newElement]);
       setSelectionElement(newElement);
       setAction("drawing");

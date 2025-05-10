@@ -9,9 +9,9 @@ import { getSvgPathFromStroke } from '@utils/global'
 
 let generator = rough.generator();
 
-export const createElement = (id, type, x1, y1, x2, y2, options = {}) => {
 
-  let { strokeColor, strokeWidth } = options
+export const createElement = (id, type, x1, y1, x2, y2, options = {}) => {
+  let { strokeColor, strokeWidth, roughness, seed } = options
 
   if (strokeColor == "") {
     strokeColor = "white";
@@ -33,8 +33,9 @@ export const createElement = (id, type, x1, y1, x2, y2, options = {}) => {
   const roughProperties = {
     strokeWidth: strokeWidth * 2,
     stroke: strokeColor,
-    roughness: 0,
-    bowing: 3,
+    roughness: roughness,
+    seed: seed,
+    // bowing: 3,
     // disableMultiStroke: true
   };
   let roughElement;
@@ -50,7 +51,7 @@ export const createElement = (id, type, x1, y1, x2, y2, options = {}) => {
   } else {
     throw new Error(`Type not found: ${type}`)
   }
-  return { id, type, x1, y1, x2, y2, width, height, strokeColor, strokeWidth, roughElement };
+  return { id, type, x1, y1, x2, y2, width, height, strokeColor, strokeWidth, roughElement, seed, roughness };
 
 }
 
@@ -60,6 +61,8 @@ export const updateElement = (element, options = {}) => {
   const newOptions = {
     strokeColor: element.strokeColor,
     strokeWidth: element.strokeWidth,
+    roughness: element.roughness,
+    seed: element.seed,
   }
   let updatedElement;
   if (["line", "rectangle", "ellipse"].includes(type)) {
