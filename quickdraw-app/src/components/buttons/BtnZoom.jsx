@@ -1,7 +1,7 @@
 import React from 'react';
 import './buttons.css'
 
-function BtnControl(prop) {
+function BtnZoom(prop) {
   return (
     <button
       className={`${prop.name !== "zoomReset" ? `hover:bg-[crimson]` : null}
@@ -19,4 +19,4 @@ function BtnControl(prop) {
   );
 }
 
-export default BtnControl;
+export default BtnZoom;

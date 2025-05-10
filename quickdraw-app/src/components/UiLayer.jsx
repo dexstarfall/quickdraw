@@ -4,30 +4,24 @@ import React from 'react'
 //components
 import ToolBar from './ToolBar'
 import ControlBar from './ControlBar';
-import MenuBar from './MenuBar';
+import SideBar from './SideBar';
 
 
 function UiLayer(prop) {
 
   return (
-    <>
-      <div className="pointer-events-none m-4
-        fixed top-0 left-0 right-0 bottom-0 z-[5]
+    <div
+      className="pointer-events-none m-4
+        fixed z-[5] top-0 left-0 right-0 bottom-0 
         ">
-        <MenuBar
-          canvasRef={prop.canvasRef}
-        />
 
+      <SideBar canvasRef={prop.canvasRef} />
 
-        <ControlBar canvasRef={prop.canvasRef} />
+      <ControlBar canvasRef={prop.canvasRef} />
 
-        <ToolBar />
+      <ToolBar />
 
-
-
-      </div>
-
-    </>
+    </div>
   )
 }
 

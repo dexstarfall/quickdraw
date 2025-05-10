@@ -17,10 +17,13 @@ function TextField({ staticCanvasRef }) {
   const { action, selectionElement, scale, scaleOffset, panOffset,
     setAction, setSelectionElement, } = useCanvasStore();
 
-  const { strokeColor } = usePropertiesStore();
+  const { strokeColor, strokeWidth } = usePropertiesStore();
 
   const textAreaRef = useRef();
   if (!selectionElement) return null;
+
+  const fontSize = 15 + (strokeWidth - 1) * 6;
+
 
 
   // textarea focus when load in text
@@ -41,17 +44,16 @@ function TextField({ staticCanvasRef }) {
     const ctx = staticCanvasRef.current.getContext('2d')
 
     ctx.textBaseline = "top";
-    const font = `20px consolas`;
+    const font = `${fontSize}px consolas`;
     ctx.font = font;
 
     const text = textAreaRef.current.value;
     const x2 = x1 + ctx.measureText(text).width;
-    const y2 = y1 + parseInt(ctx.font, 10);
+    const y2 = y1 + parseInt(fontSize);
 
     const options = { id, type, x1, y1, x2, y2, text, font }
     const updatedElement = updateElement(elements[id], options);
     setElements((pre => pre.map((elm, i) => i === id ? updatedElement : elm)), true);
-
     setAction("none");
     setSelectionElement(null);
 
@@ -62,18 +64,17 @@ function TextField({ staticCanvasRef }) {
     useCanvasStore.getState().setElements(useHistoryStore.getState().getCurrentState()); // Corrected
   }
 
-  const fontSize = 20 * scale;
+  const textAreaFont = `${fontSize * scale}px consolas`
   const left = (selectionElement.x1 + panOffset.x) * scale - scaleOffset.x;
   const top = (selectionElement.y1 + panOffset.y - 3) * scale - scaleOffset.y;
-  console.log(strokeColor)
   return (
     <>
       <textarea
         ref={textAreaRef}
         onBlur={handleBlur}
         className="fixed z-[3] bg-transparent outline-0 resize-none 
-     break-words overflow-hidden whitespace-pre"
-        style={{ font: `${fontSize}px consolas`, left, top, color: strokeColor }}
+        break-words overflow-hidden whitespace-pre"
+        style={{ font: textAreaFont, left, top, color: strokeColor }}
       > </textarea>
 
     </>

@@ -102,7 +102,7 @@ const cursorForPosition = (position) => {
 function InteractiveCanvas(
   { interactiveCanvasRef, canvasSize, pressedKeys }
 ) {
-  const { strokeColor } = usePropertiesStore();
+  const { strokeColor, strokeWidth } = usePropertiesStore();
 
   const {
     tool, action, scale, scaleOffset, panOffset, startPanPosition, selectionElement,
@@ -111,7 +111,6 @@ function InteractiveCanvas(
 
   const elements = useHistoryStore((s) => s.getCurrentState());
   const setElements = useHistoryStore((s) => s.setHistory);
-  // const undo = useHistoryStore((s) => s.undo);
   const { getCurrentState, undo } = useHistoryStore();
 
   // return element at position
@@ -133,7 +132,8 @@ function InteractiveCanvas(
       movedElement = { ...element, points: newPoints };
     } else {
       const { x1, y1, x2, y2 } = newPoints
-      movedElement = createElement(id, type, x1, y1, x2, y2);
+      const options = { strokeColor, strokeWidth }
+      movedElement = createElement(id, type, x1, y1, x2, y2, options);
       movedElement.text = element.text;
     }
     setElements((pre => pre.map((elm, i) => i === id ? movedElement : elm)), true);
@@ -187,7 +187,7 @@ function InteractiveCanvas(
       }
       // text elm creation here
       const id = elements.length;
-      const options = { strokeColor }
+      const options = { strokeColor, strokeWidth }
       const newElement = createElement(id, tool, mouseX, mouseY, mouseX, mouseY, options);
       setElements(pre => [...pre, newElement]);
       setSelectionElement(newElement);
@@ -196,7 +196,7 @@ function InteractiveCanvas(
     } else if (["freedraw", "line", "rectangle", "ellipse"].includes(tool)) { // when tool not selection
       // shape element creation here - line, rect, ellipse
       const id = elements.length;
-      const options = { pressure: event.pressure, strokeColor }
+      const options = { pressure: event.pressure, strokeColor, strokeWidth }
       const newElement = createElement(id, tool, mouseX, mouseY, mouseX, mouseY, options);
       setElements(pre => [...pre, newElement]);
       setSelectionElement(newElement);

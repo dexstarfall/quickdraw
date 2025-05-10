@@ -1,7 +1,7 @@
 import React from 'react'
 import './buttons.css'
 
-function BtnControl2(prop) {
+function BtnHistory(prop) {
   return (
     <button
       className={`
@@ -18,4 +18,4 @@ function BtnControl2(prop) {
   )
 }
 
-export default BtnControl2
+export default BtnHistory

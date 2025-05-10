@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 // store
 import { useCanvasStore, useHistoryStore } from '@stores/canvas';
-import BtnControl from './buttons/BtnControl';
-import BtnControl2 from './buttons/BtnControl2';
+import BtnZoom from './buttons/BtnZoom';
+import BtnHistory from './buttons/BtnHistory';
 
 // icons
 import {
@@ -80,38 +80,38 @@ function ControlBar(prop) {
     <>
       <div className="z-[3] absolute right-0 top-0 flex gap-4">
 
-        <button onClick={() => setConfirmDelete(true)}
+        <button
+          onClick={() => setConfirmDelete(true)}
           className="bg-neutral-800 text-white w-fit px-2 pointer-events-auto
-                    flex items-center
-                    rounded-xl shadow-lg overflow-hidden
-                    hover:bg-[crimson]
-                    ">
-
+          flex items-center
+          rounded-xl shadow-lg overflow-hidden
+          hover:bg-[crimson]">
           {deleteAllIcon}
         </button>
 
-        <div className="bg-neutral-800 text-white
-                        flex 
-                        rounded-lg shadow-lg overflow-hidden">
-          <BtnControl2 action={undo} icon={undoIcon} />
-          <BtnControl2 action={redo} icon={redoIcon} />
+        <div
+          className="bg-neutral-800 text-white
+          flex 
+          rounded-lg shadow-lg overflow-hidden">
+          <BtnHistory action={undo} icon={undoIcon} />
+          <BtnHistory action={redo} icon={redoIcon} />
         </div>
 
         <div className="bg-neutral-800 text-white w-fit 
                           flex gap-2 
                           rounded-lg shadow-lg overflow-hidden">
 
-          <BtnControl
+          <BtnZoom
             name={"zoomIn"}
             onClick={() => handleZoom(-0.1)}
             icon={zoomInIcon} />
 
-          <BtnControl
+          <BtnZoom
             name={"zoomReset"}
             onClick={() => handleZoom(0, true)}
             content={(scale * 100).toFixed(0) + "%"} />
 
-          <BtnControl
+          <BtnZoom
             name={"zoomOut"}
             onClick={() => handleZoom(0.1)}
             icon={zoomOutIcon} />
