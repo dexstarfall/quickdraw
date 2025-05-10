@@ -23,9 +23,9 @@ function TextField({ staticCanvasRef }) {
   if (!selectionElement) return null;
 
   const fontSize = 15 + (strokeWidth - 1) * 6;
-
-
-
+  
+  
+  
   // textarea focus when load in text
   useEffect(() => {
     const textArea = textAreaRef.current;
@@ -35,7 +35,6 @@ function TextField({ staticCanvasRef }) {
         textArea.value = selectionElement.text || "";
       });
     }
-
   }, [action, selectionElement])
 
   // when text area is out of focus
@@ -62,6 +61,7 @@ function TextField({ staticCanvasRef }) {
     }
     // persist text elements
     useCanvasStore.getState().setElements(useHistoryStore.getState().getCurrentState()); // Corrected
+
   }
 
   const textAreaFont = `${fontSize * scale}px consolas`

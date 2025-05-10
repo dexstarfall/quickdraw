@@ -115,6 +115,7 @@ const useCanvasStore = create(
                     tool: state.tool,
                     scale: state.scale,
                     elements: state.elements,
+                    panOffset: state.panOffset,
                 }),
                 getStorage: () => localStorage,
             }

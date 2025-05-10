@@ -130,13 +130,21 @@ function InteractiveCanvas(
     let movedElement;
     if (type === "freedraw") {
       movedElement = { ...element, points: newPoints };
-    } else {
+    } else if (type === "text") {
       const { x1, y1, x2, y2 } = newPoints
       const options = { strokeColor, strokeWidth }
       movedElement = createElement(id, type, x1, y1, x2, y2, options);
       movedElement.text = element.text;
+      movedElement.font = element.font;
+    } else {
+      const { x1, y1, x2, y2 } = newPoints
+      const options = {
+        strokeColor: element.strokeColor,
+        strokeWidth: element.strokeWidth
+      }
+      movedElement = createElement(id, type, x1, y1, x2, y2, options);
     }
-    setElements((pre => pre.map((elm, i) => i === id ? movedElement : elm)), true);
+    return movedElement;
   }
   // mouse down
   const handlePointerDown = (event) => {
@@ -175,6 +183,7 @@ function InteractiveCanvas(
       }
     } else if (tool === "text") { // when already written text is selected again
       const element = getElementAtPosition(mouseX, mouseY);
+
       if (element && element.type == "text") {
         const { x1, y1 } = element;
         const offsetX = mouseX - element.x1;
@@ -279,7 +288,8 @@ function InteractiveCanvas(
         }
 
       }
-      moveElement(elements[id], newPoints);
+      const movedElement = moveElement(elements[id], newPoints);
+      setElements((pre => pre.map((elm, i) => i === id ? movedElement : elm)), true);
 
     } else if (action === "resizing") {
 

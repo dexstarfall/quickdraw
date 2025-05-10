@@ -26,7 +26,8 @@ export const createElement = (id, type, x1, y1, x2, y2, options = {}) => {
     const { pressure } = options
     return { id, type, points: [{ x: x1, y: y1, pressure: pressure }], strokeColor, strokeWidth };
   } else if (type === "text") {
-    return { id, type, x1, y1, x2, y2, width, height, text: "", font: "", strokeColor, strokeWidth };
+    const fontSize = 15 + (strokeWidth - 1) * 6;
+    return { id, type, x1, y1, x2, y2, width, height, text: "", font: "", strokeColor, fontSize };
   }
 
   const roughProperties = {
@@ -82,6 +83,7 @@ export const updateElement = (element, options = {}) => {
 export const drawElement = (rc, ctx, element) => {
 
   ctx.fillStyle = element.strokeColor;
+  ctx.strokeStyle = element.strokeColor;
 
   // ctx.fillStyle = element.strokeColor
   // ctx.fillStyle = "white"
@@ -128,9 +130,6 @@ export const drawElement = (rc, ctx, element) => {
     ctx.textBaseline = "top";
     ctx.font = element.font;
     ctx.fillText(text, x1, y1);
-
-    console.log(element)
-    // ctx.fillRect(x1, y1, y1+element.height, 24);
 
   }
 }
