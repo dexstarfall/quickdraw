@@ -3,9 +3,11 @@ import { devtools, persist } from 'zustand/middleware';
 
 
 const propertiesStore = (set) => ({
+    fillColor: "transparent",
     strokeColor: "white",
     strokeWidth: 1,
     roughness: 2,
+    setFillColor: (color) => set({ fillColor: color }),
     setStrokeColor: (color) => set({ strokeColor: color }),
     setStrokeWidth: (width) => set({ strokeWidth: width }),
     setRoughness: (rough) => set({ roughness: rough })
@@ -132,6 +134,7 @@ const usePropertiesStore = create(
             {
                 name: "properties",
                 partialize: (state) => ({
+                    fillColor: state.fillColor,
                     strokeColor: state.strokeColor,
                     strokeWidth: state.strokeWidth,
                     roughness: state.roughness,

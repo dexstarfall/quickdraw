@@ -102,7 +102,7 @@ const cursorForPosition = (position) => {
 function InteractiveCanvas(
   { interactiveCanvasRef, canvasSize, pressedKeys }
 ) {
-  const { strokeColor, strokeWidth, roughness } = usePropertiesStore();
+  const { strokeColor, strokeWidth, roughness, fillColor } = usePropertiesStore();
 
   const {
     tool, action, scale, scaleOffset, panOffset, startPanPosition, selectionElement,
@@ -139,8 +139,9 @@ function InteractiveCanvas(
     } else {
       const { x1, y1, x2, y2 } = newPoints
       const options = {
-        strokeColor: element.strokeColor,
         strokeWidth: element.strokeWidth,
+        strokeColor: element.strokeColor,
+        fillColor: element.fillColor,
         roughness: element.roughness,
         seed: element.seed,
       }
@@ -198,7 +199,7 @@ function InteractiveCanvas(
       }
       // text elm creation here
       const id = elements.length;
-      const options = { strokeColor, strokeWidth }
+      const options = { strokeColor, strokeWidth, fillColor }
       const newElement = createElement(id, tool, mouseX, mouseY, mouseX, mouseY, options);
       setElements(pre => [...pre, newElement]);
       setSelectionElement(newElement);
@@ -209,9 +210,8 @@ function InteractiveCanvas(
       const id = elements.length;
 
       const seed = getRandomSeed()
-      const options = { pressure: event.pressure, strokeColor, strokeWidth, roughness, seed }
+      const options = { pressure: event.pressure, strokeColor, strokeWidth, roughness, seed, fillColor }
       const newElement = createElement(id, tool, mouseX, mouseY, mouseX, mouseY, options);
-      console.log(newElement)
       setElements(pre => [...pre, newElement]);
       setSelectionElement(newElement);
       setAction("drawing");

@@ -8,8 +8,8 @@ function BtnRoughness(prop) {
   const isEqual = (roughness === prop.roughness);
   return (
     <button onClick={() => setRoughness(prop.roughness)}
-      className={`${isEqual ? "outline-1 outline-black ring-2 ring-[crimson]" : null}
-                  h-6 px-1
+      className={`${isEqual ? "ring inset-ring-1 inset-ring-black ring-[crimson]" : null}
+                  h-6 px-1 
                   rounded-sm
                   `}>
       <p>{prop.text}</p>

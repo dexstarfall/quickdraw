@@ -14,22 +14,27 @@ function SideBar(prop) {
   return (
     <div>
       <button onClick={menuBarHandle}
-        className={`${isMenuOpen ? "bg-[crimson]" : null}
+        className={` bg-neutral-800
         pointer-events-auto
         w-[40px] h-[40px] 
         flex justify-center items-center
-        text-center rounded-xl
+        text-center rounded-xl 
+        hover:contrast-75 
+        active:ring ring-inset ring-[crimson]
+        active:contrast-100
         `}>
         {sideBarIcon}
       </button>
 
-      <div className={` ${isMenuOpen ? '' : 'translate-x-[-220px]'} transition-transform duration-300
+
+      <div className={`${isMenuOpen ? 'translate-x-[0]' : 'translate-x-[-220px]'} 
+        transition-transform duration-300 
          text-white w-[200px]  
         absolute z-[10] top-12 left-0 
         flex flex-col gap-2
         `} >
 
-        <MenuBar canvasRef={prop.canvasRef}/>
+        <MenuBar canvasRef={prop.canvasRef} />
 
         <PropertiesBar />
 

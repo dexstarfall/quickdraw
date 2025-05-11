@@ -8,7 +8,7 @@ function BtnWidth(prop) {
   const isEqual = (strokeWidth === prop.width);
   return (
     <button onClick={() => setStrokeWidth(prop.width)}
-      className={`${isEqual ? "outline-1 outline-black ring-2 ring-[crimson]" : null}
+      className={`${isEqual ? "ring inset-ring-1 inset-ring-black ring-[crimson]" : null}
                   w-6 h-6 
                   rounded-sm
                   `}>

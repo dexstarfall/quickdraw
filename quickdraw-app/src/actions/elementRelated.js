@@ -11,7 +11,7 @@ let generator = rough.generator();
 
 
 export const createElement = (id, type, x1, y1, x2, y2, options = {}) => {
-  let { strokeColor, strokeWidth, roughness, seed } = options
+  let { fillColor, strokeColor, strokeWidth, roughness, seed } = options
 
   if (strokeColor == "") {
     strokeColor = "white";
@@ -33,6 +33,8 @@ export const createElement = (id, type, x1, y1, x2, y2, options = {}) => {
   const roughProperties = {
     strokeWidth: strokeWidth * 2,
     stroke: strokeColor,
+    fill: fillColor,
+    fillStyle: "solid",
     roughness: roughness,
     seed: seed,
     // bowing: 3,
@@ -51,7 +53,7 @@ export const createElement = (id, type, x1, y1, x2, y2, options = {}) => {
   } else {
     throw new Error(`Type not found: ${type}`)
   }
-  return { id, type, x1, y1, x2, y2, width, height, strokeColor, strokeWidth, roughElement, seed, roughness };
+  return { id, type, x1, y1, x2, y2, width, height, strokeColor, strokeWidth, fillColor, roughElement, seed, roughness };
 
 }
 
@@ -59,6 +61,7 @@ export const createElement = (id, type, x1, y1, x2, y2, options = {}) => {
 export const updateElement = (element, options = {}) => {
   const { id, type, x1, y1, x2, y2, } = options
   const newOptions = {
+    fillColor: element.fillColor,
     strokeColor: element.strokeColor,
     strokeWidth: element.strokeWidth,
     roughness: element.roughness,
