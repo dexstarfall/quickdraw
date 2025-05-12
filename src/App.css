@@ -1,0 +1,166 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
+@import "tailwindcss";
+
+/* hover:bg-[#643a3a]  red */
+/* hover:bg-[crimson]  red */
+
+button,label {
+  cursor: pointer;
+}
+
+.custom-font-1 {
+  font-family: "Playfair Display", serif;
+}
+
+.light-theme {
+  @apply bg-red-600
+}
+
+.dark-theme {
+  @apply bg-amber-400
+}
+
+
+/* UiLayer */
+.light-UiLayer {
+  @apply
+  text-blue-700
+    /* text-[#2e2e2e] */
+}
+.dark-UiLayer {
+  @apply
+  /* text-green-300 */
+      text-neutral-200
+}
+/* TopBar */
+.TopBar {
+  @apply
+  w-full
+  absolute left-0 top-0
+  flex justify-between;
+}
+
+/* MenuBar theme*/
+.light-MenuBar{
+  @apply
+  bg-white
+  shadow-[0_0_2px_rgba(0,0,0,0.1),0_0_12px_rgba(0,0,0,0.1)]
+}
+.dark-MenuBar{
+  @apply
+  bg-neutral-800
+  shadow-[0_0_2px_rgba(0,0,0,0.1),0_0_12px_rgba(0,0,0,0.1)]
+}
+
+/* OptionsBar */
+.light-OptionsBar{
+  @apply
+  shadow-[0_0_2px_rgba(0,0,0,0.1),0_0_16px_rgba(0,0,0,0.1)]
+}
+.dark-OptionsBar{
+  @apply
+    bg-neutral-800
+  shadow-[0_0_2px_rgba(0,0,0,0.1),0_0_16px_rgba(0,0,0,0.1)]
+}
+/* BottomBar */
+
+
+/* btn */
+.light-BtnIcon {
+  @apply
+  bg-[#dbeafe]
+  shadow-[0_0_2px_rgba(0,0,0,0.1),0_0_16px_rgba(0,0,0,0.1)]
+  hover:bg-blue-100 active:ring
+  active:ring-[#1499db];
+}
+.dark-BtnIcon {
+  @apply  
+  bg-neutral-800
+  hover:bg-neutral-700 active:ring
+  active:ring-[crimson];
+}
+
+.BtnMenuAction {
+  @apply 
+  pointer-events-auto cursor-pointer
+  w-full p-2
+  flex items-center gap-2
+  text-left
+  rounded-lg 
+}
+.light-BtnMenuAction {
+  @apply
+  hover:bg-[#dbeafe] 
+  active:ring
+  active:ring-[#1499db]
+  active:bg-[#dbeafe]; 
+}
+
+
+.light-BtnOptionAction {
+  @apply
+
+  ring-[#1499db] inset-ring-white bg-[#dbeafe]
+
+  text-[#2e2e2e]
+  focus:ring-[#1499db] focus:inset-ring-white focus:ring-2 focus:inset-ring 
+}
+.dark-BtnOptionAction-selected {
+  @apply
+  bg-[crimson]
+  ring-[crimson]
+  inset-ring-neutral-800 
+}
+.dark-BtnOptionAction-notSelected {
+  @apply
+  bg-neutral-700
+  ring-0 
+  inset-ring-0
+  active:ring active:ring-[crimson] 
+}
+
+
+
+/* toolbar */
+.light-ToolBar {
+  @apply
+  shadow-[0_0_2px_rgba(0,0,0,0.3),0_0_16px_rgba(0,0,0,0.3)]
+}
+.dark-ToolBar {
+  @apply
+  bg-[#2e2e2e]
+  shadow-[0_0_2px_rgba(0,0,0,0.1),0_0_16px_rgba(0,0,0,0.1)]
+}
+
+
+
+.BtnTool {
+  @apply
+  w-[40px] h-[40px]
+  flex justify-center items-center
+  text-center rounded-lg text-neutral-200; 
+}
+.light-BtnTool {
+  @apply
+  active:ring-[#1499db] active:inset-ring-white active:ring-2 active:inset-ring 
+}
+.light-BtnTool-selected {
+  @apply
+  ring-[#1499db] inset-ring-white bg-blue-200
+}
+.light-BtnTool-notSelected {
+  @apply
+  hover:bg-[#dbeafe] 
+}
+.dark-BtnTool {
+  @apply
+  active:ring-[crimson] active:inset-ring-neutral-800 active:ring-2 active:inset-ring 
+}
+.dark-BtnTool-selected {
+  @apply
+  ring-[crimson] inset-ring-black bg-[crimson] shadow-md shadow-[crimson]
+}
+.dark-BtnTool-notSelected {
+  @apply
+  hover:bg-[#643a3a]
+}
