@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware';
 
 // Store Properties
 const themeStore = (set) => ({
-  theme: 'light',
+  theme: 'dark',
   toggleTheme: () => set((state) => ({
     theme: state.theme === 'light' ? 'dark' : 'light'
   })),

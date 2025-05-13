@@ -26,11 +26,6 @@ const StaticCanvas = forwardRef(({ canvasSize }, ref) => {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // const scaleWidth = canvas.width * scale;
-    // const scaleHeight = canvas.height * scale;
-    // const scaleOffsetX = (scaleWidth - canvas.width) / 2;
-    // const scaleOffsetY = (scaleHeight - canvas.height) / 2;
-
     ctx.save();
 
     ctx.translate(panOffset.x * scale - scaleOffset.x, panOffset.y * scale - scaleOffset.y);
