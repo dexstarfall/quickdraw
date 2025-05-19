@@ -1,13 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useCanvasStore, useHistoryStore } from '@stores/canvas';
-import {
-  undoIcon,
-  redoIcon,
-  deleteAllIcon,
-  resetCanvasIcons,
-  zoomOutIcon,
-  zoomInIcon,
-} from '../icons'
+import { DeleteAllIcon, RedoIcon, ResetCanvasIcon, UndoIcon, ZoomInIcon, ZoomOutIcon } from '../icons'
 import BtnIcon from '../buttons/BtnIcon'
 import Container from '../container/container'
 
@@ -80,44 +73,49 @@ function ControlBar({ theme, canvasRef }) {
   return (
     <div className={`w-full
     absolute left-0 bottom-0
-    flex gap-2 justify-between items-end
-    ${theme}-BottomBar`}>
+    flex gap-2 justify-between items-end`}>
       <div className='flex flex-col-reverse gap-2 lg:flex-row '>
         <Container>
           <BtnIcon
             onClick={() => handleZoom(-0.1)}
-            className={`${theme}-BtnIcon rounded-r-none`}
-          > {zoomOutIcon}
+            className={`rounded-r-none`}
+            title="Zoom Out"
+          > <ZoomOutIcon />
           </BtnIcon>
 
 
           <BtnIcon
             onClick={() => handleZoom(0, true)}
-            className={`${theme}-BtnIcon rounded-none w-[50px]`}
+            className={`rounded-none w-[50px]`}
 
+            title="Reset to 100%"
           > <p>{(scale * 100).toFixed(0) + "%"}</p>
           </BtnIcon>
 
           <BtnIcon
             onClick={() => handleZoom(0.1)}
-            className={`${theme}-BtnIcon rounded-l-none `}
+            className={`rounded-l-none `}
 
-          > {zoomInIcon}
+            title="Zoom In"
+          > <ZoomInIcon />
           </BtnIcon>
         </Container>
+
         <Container>
           <BtnIcon
             onClick={undo}
-            className={`${theme}-BtnIcon rounded-r-none`}
+            className={`rounded-r-none`}
 
-          > {undoIcon}
+            title="Undo"
+          > <UndoIcon />
           </BtnIcon>
 
           <BtnIcon
             onClick={redo}
-            className={`${theme}-BtnIcon rounded-l-none`}
+            className={`rounded-l-none`}
 
-          > {redoIcon}
+            title="Redo"
+          > <RedoIcon />
           </BtnIcon>
         </Container>
       </div>
@@ -125,32 +123,44 @@ function ControlBar({ theme, canvasRef }) {
       <Container>
         <BtnIcon
           onClick={() => setPanOffset({ x: 0, y: 0 })}
-          className={`${theme}-BtnIcon rounded-r-none`}
+          className={`rounded-r-none`}
           title="Reset Board"
-        > {resetCanvasIcons}
+        > <ResetCanvasIcon />
         </BtnIcon>
 
         <BtnIcon
           onClick={() => setConfirmDelete(true)}
-          className={`${theme}-BtnIcon rounded-l-none`}
+          className={`rounded-l-none`}
           title="Delete All Elements"
-
-        > {deleteAllIcon}
+        > <DeleteAllIcon />
         </BtnIcon>
       </Container>
 
       {confirmDelete &&
-        <div className='bg-[#1e1e1e] text-[#efefef] text-xl
+        <div className='text-lg 
                       p-4 rounded-xl pointer-events-auto
-                      absolute bottom-0 right-0'  >
-          <p className='mb-4 '>Remove all elements?</p>
+                      absolute bottom-0 right-0
+                      
+                      shadow-light-1-md
+                      bg-white
+                      dark:bg-neutral-900
+                      '  >
+          <p className='mb-2'>Remove all elements?</p>
           <div className='flex gap-2 justify-evenly'>
             <button onClick={deleteAllElements}
-              className='bg-[#2e2e2e] px-4 py-2 rounded-xl'>
+              className='px-2  rounded-md
+              
+              theme-effect-1
+              shadow-light-1-sm
+              dark:shadow-dark-1-sm'>
               Yes
             </button>
             <button onClick={() => setConfirmDelete(false)}
-              className='bg-[#2e2e2e] px-4 py-2 rounded-xl'>
+              className='px-2 rounded-md
+
+              theme-effect-1
+              shadow-light-1-sm
+              dark:shadow-dark-1-sm'>
               No
             </button>
           </div>

@@ -9,7 +9,8 @@ function BottomBar({ canvasRef }) {
   const { theme } = useThemeStore();
 
   return (
-    <div className={`w-full
+    <div className={`
+      w-full
     absolute left-0 bottom-0
     flex justify-between ${theme}-BottomBar`}>
       <div className='flex gap-2'>

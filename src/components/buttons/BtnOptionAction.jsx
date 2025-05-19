@@ -11,7 +11,8 @@ function BtnOptionAction({
 
   return (
     <button
-      className={`w-6 h-6 rounded-sm ${className} `}
+      className={`theme-effect-1
+        w-6 h-6 rounded-sm ${className} `}
       {...props}
     >
       {children}

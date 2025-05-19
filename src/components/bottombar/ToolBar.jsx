@@ -2,17 +2,7 @@ import React from 'react'
 // stores
 import BtnTool from '../buttons/BtnTools';
 import { useCanvasStore } from '@stores/canvas';
-
-import {
-  selectionIcon,
-  handIcon,
-  freedrawIcon,
-  lineIcon,
-  ellipseIcon,
-  rectangleIcon,
-  textIcon,
-  eraserIcon,
-} from '../icons'
+import { EllipseIcon, EraserIcon, FreeDrawIcon, HandIcon, LineIcon, RectangleIcon, SelectionIcon, TextIcon } from '../icons';
 
 function ToolBar({
   theme,
@@ -21,30 +11,27 @@ function ToolBar({
 
   // Tool list with name and corresponding icon
   const toolList = [
-    { name: 'selection', icon: selectionIcon },
-    { name: 'hand', icon: handIcon },
-    { name: 'freedraw', icon: freedrawIcon },
-    { name: 'line', icon: lineIcon },
-    { name: 'rectangle', icon: rectangleIcon },
-    { name: 'ellipse', icon: ellipseIcon },
-    { name: 'text', icon: textIcon },
-    { name: 'eraser', icon: eraserIcon },
+    { name: 'selection', icon: <SelectionIcon /> },
+    { name: 'hand', icon: <HandIcon /> },
+    { name: 'freedraw', icon: <FreeDrawIcon /> },
+    { name: 'line', icon: <LineIcon /> },
+    { name: 'rectangle', icon: <RectangleIcon /> },
+    { name: 'ellipse', icon: <EllipseIcon /> },
+    { name: 'text', icon: <TextIcon /> },
+    { name: 'eraser', icon: <EraserIcon /> },
   ];
 
   return (
     <div
-      className={`pointer-events-auto
-      w-fit mx-auto p-2
-      absolute bottom-0 left-[50%] translate-x-[-50%]
-      flex gap-2 rounded-xl shadow-neutral-950 ${theme}-ToolBar`}>
+      className={`pointer-events-auto ToolBar`}>
 
       {toolList.map(({ name, icon }) => (
         <BtnTool
           key={name}
           name={name}
           isActive={tool == name}
-          className={`${theme}-BtnTool
-          ${theme}-BtnTool-${tool == name ? `selected` : `notSelected`} `}
+          className={`BtnTool theme-effect-1
+          BtnTool-${tool == name ? `selected` : null } `}
           onChange={() => setTool(name)}
         >
           {icon}

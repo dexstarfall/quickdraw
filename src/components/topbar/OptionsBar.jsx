@@ -50,12 +50,12 @@ function OptionsBar({
   ];
 
   return (
-    <div className={`pointer-events-auto
-      w-fit py-2 px-4
+    <div className={` pointer-events-auto
+      w-[200px]  
+      p-2
       rounded-xl
-      absolute top-12 right-0 
-      flex flex-col gap-2 ${theme}-OptionsBar ${className}`}
-    >
+      absolute top-12 left-0 
+      flex flex-col gap-2 ${className}`} >
       <p>Stroke Color:</p>
       <ContainerBtnOption>
         {strokeColorList.map(({ value }) => (
@@ -64,8 +64,8 @@ function OptionsBar({
             current={strokeColor}
             onClick={() => setStrokeColor(value)}
             value={value}
-            className={`hover:scale-110 ring inset-ring-1
-                        ${theme}-BtnOptionAction-${strokeColor == value ? 'selected' : 'notSelected'}`}
+            className={`hover:scale-110
+            BtnOptionAction-${strokeColor == value ? 'selected' : null}`}
             style={{ backgroundColor: value, }}
           />
         ))}
@@ -74,51 +74,52 @@ function OptionsBar({
       {["rectangle", "ellipse"].includes(tool) && <>
         <p>Fill Color:</p>
         <ContainerBtnOption>
-          {fillColorList.map(({ value, label }) => (
+          {fillColorList.map(({ value }) => (
             <BtnOptionAction
               key={value}
               current={fillColor}
               value={value}
               onClick={() => setFillColor(value)}
-              className={`hover:scale-110 ring inset-ring-1
-            ${theme}-BtnOptionAction-${fillColor == value ? 'selected' : 'notSelected'}`}
+              className={`hover:scale-110
+              BtnOptionAction-${fillColor == value ? 'selected' : null}`}
               style={{ backgroundColor: value, }}
+          />
+        ))}
+        </ContainerBtnOption>
+      </>}
+      {!(tool === "text") && <>
+        <p>Stroke Width:</p>
+        <ContainerBtnOption>
+          {strokeWidthList.map(({ value, label }) => (
+            <BtnOptionAction
+              key={value}
+              current={strokeWidth}
+              value={value}
+              className={`BtnOptionAction-${strokeWidth === value ? 'selected' : null}`}
+              onClick={() => setStrokeWidth(value)}
             >
-              {label && <p>{label}</p>}  {/* Render label if present */}
+              <p>{label}</p>
             </BtnOptionAction>
           ))}
         </ContainerBtnOption>
       </>}
 
-      <p>Stroke Width:</p>
-      <ContainerBtnOption>
-        {strokeWidthList.map(({ value, label }) => (
-          <BtnOptionAction
-            key={value}
-            current={strokeWidth}
-            value={value}
-            className={`${theme}-BtnOptionAction-${strokeWidth === value ? 'selected' : 'notSelected'}`}
-            onClick={() => setStrokeWidth(value)}
-          >
-            <p>{label}</p>
-          </BtnOptionAction>
-        ))}
-      </ContainerBtnOption>
-
-      {/* <p>Font Size:</p>
-      <ContainerBtnOption>
-        {fontSizeList.map(({ value, label }) => (
-          <BtnOptionAction
-            key={value}
-            current={fontSize}
-            value={value}
-            className={`${theme}-BtnOptionAction-${fontSize == value ? 'selected' : 'notSelected'}`}
-            onClick={() => setFontSize(value)}  // Set the font size on click
-          >
-            <p>{label}</p>
-          </BtnOptionAction>
-        ))}
-      </ContainerBtnOption> */}
+      {(tool === "text") && <>
+        <p>Font Size:</p>
+        <ContainerBtnOption>
+          {fontSizeList.map(({ value, label }) => (
+            <BtnOptionAction
+              key={value}
+              current={fontSize}
+              value={value}
+              className={`BtnOptionAction-${fontSize == value ? 'selected' : null}`}
+              onClick={() => setFontSize(value)}  // Set the font size on click
+            >
+              <p>{label}</p>
+            </BtnOptionAction>
+          ))}
+        </ContainerBtnOption>
+      </>}
 
       {!(tool === "text" || tool === "freedraw") && <>
         <p>Roughness:</p>
@@ -128,7 +129,7 @@ function OptionsBar({
               key={value}
               current={roughness}
               value={value}
-              className={`w-fit px-2 ${theme}-BtnOptionAction-${roughness == value ? 'selected' : 'notSelected'}`}
+              className={`w-fit px-2 BtnOptionAction-${roughness == value ? 'selected' : null}`}
               onClick={() => setRoughness(value)}  // Set roughness on click
             >
               <p>{label}</p>

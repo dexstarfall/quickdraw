@@ -1,13 +1,11 @@
 import React, { useState } from 'react'
 import { useCanvasStore } from '@stores/canvas';
 import { useThemeStore } from '@stores/theme.js'
-import {
-  sideBarIcon,
-  optionsIcon
-} from './icons'
+
 import BtnIcon from './buttons/BtnIcon';
 import MenuBar from './topbar/MenuBar';
 import OptionsBar from './topbar/OptionsBar';
+import { OptionsIcon, SideBarIcon } from './icons';
 
 function TopBar({ canvasRef }) {
   const { theme } = useThemeStore();
@@ -16,32 +14,39 @@ function TopBar({ canvasRef }) {
 
   const [isMenuBarOpen, setIsMenuBarOpen] = useState(false)
   const [isPropertiesBarOpen, setIsPropertiesBarOpen] = useState(false)
+  console.log(theme)
   return (
     <>
-      <div className={`TopBar ${theme}-TopBar`}>
+      <div className={`
+            w-full
+            absolute left-0 top-0
+            flex gap-2`}>
         <BtnIcon
-          onClick={() => setIsMenuBarOpen(!isMenuBarOpen)}
-          className={`${theme}-BtnIcon`}
-        > {sideBarIcon}
+          onClick={() => {setIsMenuBarOpen(!isMenuBarOpen); setIsPropertiesBarOpen(false);}}
+          className={`${theme}-BtnIcon shadow-light-1-sm  dark:shadow-dark-1-sm`}
+        >
+          <SideBarIcon />
         </BtnIcon>
 
-        {tool !== "eraser" && <BtnIcon
-          onClick={() => setIsPropertiesBarOpen(!isPropertiesBarOpen)}
-          className={`${theme}-BtnIcon`}
-        > {optionsIcon}
+        {!(["selection","hand","eraser"].includes(tool)) && <BtnIcon
+          onClick={() => {setIsPropertiesBarOpen(!isPropertiesBarOpen); setIsMenuBarOpen(false);} }
+          className={`${theme}-BtnIcon shadow-light-1-sm dark:shadow-dark-1-sm`}
+        > <OptionsIcon />
         </BtnIcon>}
 
         <MenuBar
           canvasRef={canvasRef}
           theme={theme}
-          className={`${isMenuBarOpen ? null : 'translate-x-[-220px]'} 
-            transition-transform duration-300 `}
+          className={`SlideMenu
+            ${isMenuBarOpen ? 'duration-300' : 'translate-x-[-220px]'} 
+            transition-transform duration-100 `}
         />
 
-        {tool !== "eraser" && <OptionsBar
+        {!(["selection","hand","eraser"].includes(tool)) && <OptionsBar
           theme={theme}
-          className={`${isPropertiesBarOpen ? null : 'translate-x-[300px]'} 
-            transition-transform duration-300 `}
+          className={`SlideMenu
+            ${isPropertiesBarOpen ? 'duration-300' : 'translate-x-[-220px]'} 
+            transition-transform duration-100`}
         />}
       </div>
 

@@ -8,25 +8,18 @@ import {
   saveCanvasToFile,
   exportCanvasToImage
 } from '@engine/fileHandler'
-import {
-  downloadIcon,
-  loadCanvasIcon,
-  saveCanvasIcon,
-  extraIcon
-} from '../icons'
 import BtnMenuAction from '../buttons/BtnMenuAction'
+import { DownloadIcon, ExtraIcon, LoadCanvasIcon, SaveCanvasIcon } from '../icons';
 
 function MenuBar({
   canvasRef,
-  theme,
   className = '',
   ...props
 }) {
-  const { toggleTheme } = useThemeStore();
+  const { theme, setTheme } = useThemeStore();
 
   const setElements = useHistoryStore((s) => s.setHistory);
   const { getCurrentState } = useHistoryStore();
-
 
   const loadCanvasFromFile = async () => {
     try {
@@ -54,34 +47,43 @@ function MenuBar({
   };
 
   const menuList = [
-    { icon: loadCanvasIcon, label: "Load Canvas", action: loadCanvasFromFile },
-    { icon: saveCanvasIcon, label: "Save Canvas", action: saveCanvasToFile },
-    { icon: downloadIcon, label: "Export As Image", action: () => exportCanvasToImage(canvasRef, "quickdrawCanvas.png") },
-    { icon: extraIcon, label: "Future Features" },
+    { icon: <LoadCanvasIcon />, label: "Load Canvas", action: loadCanvasFromFile },
+    { icon: <SaveCanvasIcon />, label: "Save Canvas", action: saveCanvasToFile },
+    { icon: <DownloadIcon />, label: "Export As Image", action: () => exportCanvasToImage(canvasRef, "quickdrawCanvas.png") },
+    { icon: <ExtraIcon />, label: "Future Features" },
   ]
   return (
     <div
-      className={`
-      pointer-events-auto
+      className={` pointer-events-auto
       w-[200px]  
       p-2
       rounded-xl
       absolute top-12 left-0 
-      flex flex-col gap-2 ${theme}-MenuBar ${className}`} >
-      {/* <button onClick={toggleTheme}>
-        Toggle Theme
-      </button> */}
-
+      flex flex-col gap-2 ${className}`} >
       {menuList.map(({ icon, label, action, hover = "" }, index) => (
         <BtnMenuAction
           key={index}
           onClick={action}
-          className={`${theme}-BtnMenuAction hover:bg-[#404040] active:ring active:ring-[crimson]  `}
         >
           {icon}
           <p>{label}</p>
         </BtnMenuAction>
       ))}
+
+      <p>Theme:</p>
+
+
+      <div className='flex gap-2 justify-center'>
+        {['dark', 'light', 'device'].map((item) => (
+          <button
+            key={item}
+            className={`theme-effect-1 px-2 rounded-md  ${item === theme ? "BtnOptionAction-selected" : null}`}
+            onClick={() => setTheme(item)}>
+              
+            {item !== 'device'? item : 'auto' }
+          </button>
+        ))}
+      </div>
     </div>
   )
 }

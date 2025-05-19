@@ -6,9 +6,10 @@ function Container({
   ...props
 }) {
   return (
-    <div className={`w-fit h-fit flex shadow-sm shadow-neutral-950 rounded-xl ${className}`}
+    <div className={`Container
+      w-fit h-fit flex rounded-xl ${className}`}
       {...props}>
-        {children}
+      {children}
     </div>
   )
 }

@@ -7,9 +7,10 @@ function BtnIcon({
 }) {
   return (
     <button
-      className={`pointer-events-auto cursor-pointer
+      className={`BtnIcon theme-effect-1
+        pointer-events-auto cursor-pointer
       w-[32px] h-[32px] 
-      flex justify-center items-center text-center 
+      flex justify-center items-center text-center
       rounded-lg ring-inset ${className}`}
       {...props}
     >

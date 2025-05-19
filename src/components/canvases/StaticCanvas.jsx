@@ -43,7 +43,7 @@ const StaticCanvas = forwardRef(({ canvasSize }, ref) => {
   return (
     <canvas
       ref={ref}
-      className="fixed z-[1] bg-neutral-900"
+      className="fixed z-[1] bg-white dark:bg-neutral-950"
       width={canvasSize.width}
       height={canvasSize.height}
     >
