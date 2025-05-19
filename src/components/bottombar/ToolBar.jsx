@@ -4,9 +4,7 @@ import BtnTool from '../buttons/BtnTools';
 import { useCanvasStore } from '@stores/canvas';
 import { EllipseIcon, EraserIcon, FreeDrawIcon, HandIcon, LineIcon, RectangleIcon, SelectionIcon, TextIcon } from '../icons';
 
-function ToolBar({
-  theme,
-}) {
+function ToolBar() {
   const { tool, setTool } = useCanvasStore();
 
   // Tool list with name and corresponding icon
@@ -31,7 +29,7 @@ function ToolBar({
           name={name}
           isActive={tool == name}
           className={`BtnTool theme-effect-1
-          BtnTool-${tool == name ? `selected` : null } `}
+          BtnTool-${tool == name ? `selected` : null} `}
           onChange={() => setTool(name)}
         >
           {icon}

@@ -14,7 +14,6 @@ function TopBar({ canvasRef }) {
 
   const [isMenuBarOpen, setIsMenuBarOpen] = useState(false)
   const [isPropertiesBarOpen, setIsPropertiesBarOpen] = useState(false)
-  console.log(theme)
   return (
     <>
       <div className={`

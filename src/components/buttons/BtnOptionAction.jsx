@@ -1,5 +1,4 @@
 import React from 'react'
-import { useThemeStore } from '@stores/theme.js'
 function BtnOptionAction({
   current,
   value,
@@ -7,7 +6,6 @@ function BtnOptionAction({
   className = '',
   ...props
 }) {
-  const { theme } = useThemeStore();
 
   return (
     <button

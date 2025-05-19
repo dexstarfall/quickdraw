@@ -4,7 +4,7 @@ import { DeleteAllIcon, RedoIcon, ResetCanvasIcon, UndoIcon, ZoomInIcon, ZoomOut
 import BtnIcon from '../buttons/BtnIcon'
 import Container from '../container/container'
 
-function ControlBar({ theme, canvasRef }) {
+function ControlBar({ canvasRef }) {
 
   const { scale, setScaleOffset, setScale, setPanOffset, panOffset } = useCanvasStore();
   const { undo, redo } = useHistoryStore();

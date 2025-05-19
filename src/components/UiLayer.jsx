@@ -1,11 +1,8 @@
 import React, { memo } from 'react'
-import { useThemeStore } from '@stores/theme'
 import TopBar from './TopBar';
 import BottomBar from './BottomBar';
 
 function UiLayer({ staticCanvasRef }) {
-  const { theme } = useThemeStore();
-  console.log(theme)
   return (
     <div className={`UiLayer
         pointer-events-none m-4 
