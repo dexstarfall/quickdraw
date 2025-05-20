@@ -85,13 +85,10 @@ export const updateElement = (element, options = {}) => {
   return updatedElement;
 }
 
-export const drawElement = (rc, ctx, element) => {
+export const drawElement = (rc, ctx, element, options = {}) => {
 
   ctx.fillStyle = element.strokeColor;
   ctx.strokeStyle = element.strokeColor;
-
-  // ctx.fillStyle = element.strokeColor
-  // ctx.fillStyle = "white"
 
   const { type, points } = element;
 

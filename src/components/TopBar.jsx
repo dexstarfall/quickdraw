@@ -22,14 +22,14 @@ function TopBar({ canvasRef }) {
             flex gap-2`}>
         <BtnIcon
           onClick={() => {setIsMenuBarOpen(!isMenuBarOpen); setIsPropertiesBarOpen(false);}}
-          className={`${theme}-BtnIcon shadow-light-1-sm  dark:shadow-dark-1-sm`}
+          className={`shadow-light-1-sm  dark:shadow-dark-1-sm`}
         >
           <SideBarIcon />
         </BtnIcon>
 
         {!(["selection","hand","eraser"].includes(tool)) && <BtnIcon
           onClick={() => {setIsPropertiesBarOpen(!isPropertiesBarOpen); setIsMenuBarOpen(false);} }
-          className={`${theme}-BtnIcon shadow-light-1-sm dark:shadow-dark-1-sm`}
+          className={`shadow-light-1-sm dark:shadow-dark-1-sm`}
         > <OptionsIcon />
         </BtnIcon>}
 
@@ -42,7 +42,6 @@ function TopBar({ canvasRef }) {
         />
 
         {!(["selection","hand","eraser"].includes(tool)) && <OptionsBar
-          theme={theme}
           className={`SlideMenu
             ${isPropertiesBarOpen ? 'duration-300' : 'translate-x-[-220px]'} 
             transition-transform duration-100`}

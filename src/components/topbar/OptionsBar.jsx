@@ -1,9 +1,10 @@
-import { useOptionsStore } from '@stores/canvas';
-import { useCanvasStore } from '@stores/canvas';
+import { useOptionsStore, useCanvasStore } from '@stores/canvas';
+import { useThemeStore } from '@stores/theme'
+
 import BtnOptionAction from '../buttons/BtnOptionAction';
 import ContainerBtnOption from '../container/ContainerBtnOption';
+import { useEffect, useState } from 'react';
 function OptionsBar({
-  theme,
   className = '',
   ...props
 }) {
@@ -11,11 +12,14 @@ function OptionsBar({
   const { strokeColor, fillColor, strokeWidth, fontSize, roughness,
     setStrokeColor, setFillColor, setStrokeWidth, setFontSize, setRoughness
   } = useOptionsStore();
+  const { theme } = useThemeStore();
+
+  const [strokeColorPicker, setStrokeColorPicker] = useState("transparent");
+  const [fillColorPicker, setFillColorPicker] = useState("transparent");
 
   const strokeColorList = [
-    { value: '#F0F3F5' }, // Light Gray
-    { value: '#342E37' }, // Dark Gray
-    { value: '#ECA400' }, // Yellow
+    { value: theme === 'dark' ? '#F0F3F5' : "#121212" }, // Light Gray
+    { value: '#808080' }, // Dark Gray
     { value: '#419D78' }, // Green
     { value: '#228CDB' }, // Blue
     { value: '#D91E36' }, // Red
@@ -23,8 +27,7 @@ function OptionsBar({
 
   const fillColorList = [
     { value: "transparent" },
-    { value: "#342E37" },
-    { value: "#ECA400" },
+    { value: "#808080" },
     { value: "#0B7A75" },
     { value: "#192A51" },
     { value: "#841C26" },
@@ -69,6 +72,18 @@ function OptionsBar({
             style={{ backgroundColor: value, }}
           />
         ))}
+
+        <div className="ml-3 w-6 h-6 relative overflow-hidden rounded-sm border-[3px]">
+          <input type="color" id="colorPicker1"
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+            onChange={(e) => { setStrokeColorPicker(e.target.value); setStrokeColor(e.target.value) }}
+          />
+          <label htmlFor="colorPicker1"
+            className="block w-full h-full"
+            style={{ backgroundColor: strokeColorPicker }}
+          ></label>
+        </div>
+
       </ContainerBtnOption>
 
       {["rectangle", "ellipse"].includes(tool) && <>
@@ -83,8 +98,20 @@ function OptionsBar({
               className={`hover:scale-110
               BtnOptionAction-${fillColor == value ? 'selected' : null}`}
               style={{ backgroundColor: value, }}
-          />
-        ))}
+            >
+              {value === "transparent" ? <p>T</p> : null}
+            </BtnOptionAction>
+          ))}
+          <div className="ml-3 w-6 h-6 relative overflow-hidden rounded-sm border-[3px]">
+            <input type="color" id="colorPicker1"
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              onChange={(e) => { setFillColorPicker(e.target.value); setFillColor(e.target.value) }}
+            />
+            <label htmlFor="colorPicker1"
+              className="block w-full h-full"
+              style={{ backgroundColor: fillColorPicker }}
+            ></label>
+          </div>
         </ContainerBtnOption>
       </>}
       {!(tool === "text") && <>

@@ -137,7 +137,7 @@ function ControlBar({ canvasRef }) {
       </Container>
 
       {confirmDelete &&
-        <div className='text-lg 
+        <div className='text-lg z-10
                       p-4 rounded-xl pointer-events-auto
                       absolute bottom-0 right-0
                       

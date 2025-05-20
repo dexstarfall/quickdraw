@@ -1,13 +1,25 @@
 import React, { forwardRef, memo, useEffect } from 'react'
 import rough from 'roughjs';
 // store
-import { useCanvasStore, useHistoryStore } from '@stores/canvas';
+import {
+  useCanvasStore,
+  useHistoryStore,
+  useOptionsStore
+} from '@stores/canvas';
+import { useThemeStore } from '@stores/theme'
 import { drawElement } from '@engine/elementRelated';
 
 
 const StaticCanvas = forwardRef(({ canvasSize }, ref) => {
   const { action, selectionElement, scale, panOffset, scaleOffset } = useCanvasStore();
   const elements = useHistoryStore((s) => s.getCurrentState());
+
+  const { strokeColor, fillColor, strokeWidth, fontSize, roughness,
+    setStrokeColor, setFillColor, setStrokeWidth, setFontSize, setRoughness
+  } = useOptionsStore();
+
+
+  const { theme } = useThemeStore();
 
   // overwrite history with initial elements
   useEffect(() => {
@@ -34,10 +46,39 @@ const StaticCanvas = forwardRef(({ canvasSize }, ref) => {
       //  when re-editing text hide canvas text
       if (action === "writing" && selectionElement.id === elm.id) return;
 
+      // according to theme
+      const lightColor = "#F0F3F5";
+      const darkColor = "#121212";
+      switch (theme) {
+
+        case "light":
+          if (elm.strokeColor === lightColor) {
+            elm.strokeColor = darkColor
+            setStrokeColor(darkColor)
+          }
+          if (elm.roughElement && elm.roughElement.options.stroke === lightColor) {
+            elm.roughElement.options.stroke = darkColor;
+            setStrokeColor(darkColor)
+          }
+          break;
+        case "dark":
+          if (elm.strokeColor === darkColor) {
+            elm.strokeColor = lightColor
+            setStrokeColor(lightColor)
+          }
+          if (elm.roughElement && elm.roughElement.options.stroke === darkColor) {
+            elm.roughElement.options.stroke = lightColor;
+            setStrokeColor(lightColor)
+          }
+          break;
+          default:
+          setStrokeColor(lightColor)
+      }
+
       drawElement(rc, ctx, elm)
     });
     ctx.restore();
-  }, [canvasSize, elements, action, selectionElement, panOffset, scale]);
+  }, [canvasSize, elements, action, selectionElement, panOffset, scale, theme]);
 
 
   return (

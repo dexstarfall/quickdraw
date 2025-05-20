@@ -6,7 +6,7 @@ function ContainerBtnOption({
   ...props
 }) {
   return (
-    <div className={`flex gap-2 rounded-xl ${className}`}
+    <div className={`flex gap-1 rounded-xl ${className}`}
       {...props}>
         {children}
     </div>
